@@ -37,6 +37,7 @@ Route::middleware('auth:api')->group(function () {
 // Routes for non-logged-in users
 Route::middleware(['shoppingGuest'])->group(function () {
     Route::prefix('products')->group(function () {
+        Route::get('/discountproduct', [ProductController::class, 'getDiscountProduct']);
         Route::get('/', [ProductController::class, 'index']);
         Route::get('/search', [ProductController::class, 'search']);
         Route::get('/{productId}', [ProductController::class, 'show']);
@@ -66,7 +67,7 @@ Route::middleware('auth:api')->group(function () {
     Route::prefix('carts')->group(function () {
         Route::get('/', [CartController::class, 'index']);
         Route::post('/add/{user}', [CartController::class, 'addOrUpdateCartItem']);
-        // Route::put('/update/{cart}', [CartController::class, 'update']);
+        Route::put('/update/{cart}', [CartController::class, 'update']);
         Route::delete('/delete/{cart}', [CartController::class, 'destroy']);
     });
 

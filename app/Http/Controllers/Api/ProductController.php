@@ -22,7 +22,7 @@ class ProductController extends Controller
         $products = Product::join('categories', 'products.category_id', '=', 'categories.id')
             ->select('products.*', 'categories.category_name as category')
             // ->paginate(10); 
-            ->get();
+            ->get()->take(10);
         return response()->json([
             'status' => 'success',
             'data' => ['products' => $products],
@@ -31,6 +31,28 @@ class ProductController extends Controller
 
 
 
+    public function getDiscountProduct()
+    {
+        try {
+            $products = Product::join('categories', 'products.category_id', '=', 'categories.id')
+                ->where('regular_price', '!=', '0')
+                ->orWhere('regular_price', '!=', '')
+                ->select('products.*', 'categories.category_name as category')
+                ->get()->take(10);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => ['products' => $products]
+            ],200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error1',
+                'mesasage' => 'Unable to fetch resource. ' . $e->getMessage()
+
+            ],422);
+        }
+
+    }
     public function show($productId)
     {
         try {
@@ -257,7 +279,7 @@ class ProductController extends Controller
 
 
 
-// Search with filters
+    // Search with filters
     public function search(Request $request)
     {
         try {
@@ -269,45 +291,45 @@ class ProductController extends Controller
                 'min_price' => 'sometimes|numeric|min:0',
                 'max_price' => 'sometimes|numeric|min:' . ($request->input('min_price') ?? 0),
             ]);
-    
+
             $validator->validate();
-    
+
             $query = $request->input('query');
-    
+
             $results = Product::where(function ($queryBuilder) use ($query) {
                 $queryBuilder->where('name', 'like', "%$query%")
-                             ->orWhere('description', 'like', "%$query%");
+                    ->orWhere('description', 'like', "%$query%");
             });
-    
+
             if ($request->has('category')) {
                 $category = $request->input('category');
                 $results->where('category_id', $category);
             }
-    
+
             if ($request->has('free_shipping')) {
                 $freeShipping = $request->input('free_shipping');
                 $results->where('free_shipping', $freeShipping);
             }
-    
+
             if ($request->has('cash_on_delivery')) {
                 $cashOnDelivery = $request->input('cash_on_delivery');
                 $results->where('cash_on_delivery', $cashOnDelivery);
             }
-    
+
             if ($request->has('min_price') && $request->has('max_price')) {
                 $minPrice = $request->input('min_price');
                 $maxPrice = $request->input('max_price');
                 $results->whereBetween('sales_price', [$minPrice, $maxPrice]);
             }
-    
+
             $results = $results->get();
-    
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Search results retrieved successfully',
                 'data' => $results,
             ]);
-    
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'status' => 'error',
@@ -316,7 +338,7 @@ class ProductController extends Controller
             ], 422);
         }
     }
-    
+
 
 
     public function similarProduct($productId)
@@ -345,7 +367,7 @@ class ProductController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data' => ['similarProducts'=>$similarProducts],
+            'data' => ['similarProducts' => $similarProducts],
         ]);
     }
 
