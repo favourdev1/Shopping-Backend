@@ -31,16 +31,16 @@ class ProductTableSeeder extends Seeder
 
         // Define the image links
         $imageLinks = [
-            "https://ae01.alicdn.com/kf/Sf8e138757c0646538f35aa037db3438ei/Air-Conditioner-Mini-Fan-Cooler-Portable-Air-Cooler-AC-Air-Conditioning-3-Gear-Speed-Air-Cooling.jpg_350x350xz.jpg_.webp",
-            "https://ae01.alicdn.com/kf/S355a08bee5e14ba68ff955f587b3b78fy/Air-Conditioner-Mini-Fan-Cooler-Portable-Air-Cooler-AC-Air-Conditioning-3-Gear-Speed-Air-Cooling.jpg_350x350xz.jpg_.webp",
-            "https://ae01.alicdn.com/kf/Sa24f41ac53234b6ea52a15062a3c2517J/Air-Conditioner-Mini-Fan-Cooler-Portable-Air-Cooler-AC-Air-Conditioning-3-Gear-Speed-Air-Cooling.jpg_350x350xz.jpg_.webp",
-            "https://ae01.alicdn.com/kf/S6c06f3c1a193440ca0eff17a4485b86bh/Air-Conditioner-Mini-Fan-Cooler-Portable-Air-Cooler-AC-Air-Conditioning-3-Gear-Speed-Air-Cooling.jpg_350x350xz.jpg_.webp",
-            "https://ae01.alicdn.com/kf/S40031f52a8184193b988b4b6752ce230a/Air-Conditioner-Mini-Fan-Cooler-Portable-Air-Cooler-AC-Air-Conditioning-3-Gear-Speed-Air-Cooling.jpg_350x350xz.jpg_.webp",
-            "https://ae01.alicdn.com/kf/Sb11840c270364af4a8e443327c2e90e5Z/Air-Conditioner-Mini-Fan-Cooler-Portable-Air-Cooler-AC-Air-Conditioning-3-Gear-Speed-Air-Cooling.jpg_350x350xz.jpg_.webp",
-            "https://ae01.alicdn.com/kf/Seb396371f0814b66b628a6d01030bce6r/58L-0-38kw-24h-Household-Small-Commercial-Large-Capacity-Refrigeration-Horizontal-Freezer-Rapid-Freezing-Rental-Small.jpg_350x350xz.jpg_.webp",
-            "https://ae01.alicdn.com/kf/Sc11aff73450d49bb89066ec4d302e469r/58L-0-38kw-24h-Household-Small-Commercial-Large-Capacity-Refrigeration-Horizontal-Freezer-Rapid-Freezing-Rental-Small.jpg_350x350xz.jpg_.webp",
-            "https://ae01.alicdn.com/kf/S9720f19e45d44bf1a0ed35c90fa130aaZ/58L-0-38kw-24h-Household-Small-Commercial-Large-Capacity-Refrigeration-Horizontal-Freezer-Rapid-Freezing-Rental-Small.jpg_350x350xz.jpg_.webp",
-            "https://ae01.alicdn.com/kf/Sa8e2c390427f4f30aae4d1a198c233c9j/58L-0-38kw-24h-Household-Small-Commercial-Large-Capacity-Refrigeration-Horizontal-Freezer-Rapid-Freezing-Rental-Small.jpg_350x350xz.jpg_.webp",
+            "http://localhost:8000/storage/product_img/1706547905.jpg",
+            "http://localhost:8000/storage/product_img/1706547947.jpg",
+            "http://localhost:8000/storage/product_img/1706547953.jpg",
+            "http://localhost:8000/storage/product_img/1706547959.jpg",
+            "http://localhost:8000/storage/product_img/1706547967.jpg",
+            // "http://localhost:8000/storage/product_img/",
+            // "http://localhost:8000/storage/product_img/",
+            // "http://localhost:8000/storage/product_img/",
+            // "http://localhost:8000/storage/product_img/",
+            // "http://localhost:8000/storage/product_img/",
         ];
 
         foreach ($categories as $category) {
@@ -49,7 +49,7 @@ class ProductTableSeeder extends Seeder
                     'product_name' => 'Product ' . $i . ' - ' . $category->category_name,
                     'category_id' => $category->id,
                     'description' => 'Description for Product ' . $i,
-                    'regular_price' => rand(50, 200),
+                    'regular_price' => rand(2000, 10000),
                     'brand' => 'Brand ' . $i,
                     'product_img1' => $imageLinks[rand(0, count($imageLinks) - 1)],
                     'product_img2' => $imageLinks[rand(0, count($imageLinks) - 1)],
@@ -60,7 +60,7 @@ class ProductTableSeeder extends Seeder
                     'quantity_in_stock' => rand(10, 100),
                     'tags' => 'Tag' . $i,
                     'status' => 'active',
-                    'sales_price' => rand(30, 150),
+                    'sales_price' => rand(1000, 5000),
                     'meta_title' => 'Meta Title for Product ' . $i,
                     'meta_description' => 'Meta Description for Product ' . $i,
                     'cash_on_delivery' => rand(0, 1) ? 'true' : 'false',

@@ -14,7 +14,8 @@ class ProductFactory extends Factory
         $this->faker->locale(); // Set the locale to English
 
         return [
-           "product_name" =>$this->faker->word,
+        //    "product_name" =>$this->faker->word,
+        "product_name"=>"product"+ $this->faker->numberBetween(1,100),
             // 'category_id' => \App\Models\Category::factory(),
             'category_id'=>$this->faker->numberBetween(1,5),
             'description' => $this->faker->sentence,

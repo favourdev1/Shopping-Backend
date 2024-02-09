@@ -43,13 +43,13 @@ class ProductController extends Controller
             return response()->json([
                 'status' => 'success',
                 'data' => ['products' => $products]
-            ],200);
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error1',
                 'mesasage' => 'Unable to fetch resource. ' . $e->getMessage()
 
-            ],422);
+            ], 422);
         }
 
     }
@@ -275,36 +275,99 @@ class ProductController extends Controller
     // TODO fix bug with serarch method
 
 
+    private function fetchCategories($categoryName)
+    {
+        $categories = Category::where('category_name', 'like', '%' . $categoryName . '%');
+        if (!$categories->count()) {
 
+            return false;
+        }
+
+        return $categories->get(['id', 'category_name']);
+    }
 
 
 
     // Search with filters
     public function search(Request $request)
     {
-        try {
-            $validator = Validator::make($request->all(), [
-                'query' => 'required|string|min:3',
-                'category' => 'sometimes|exists:categories,id',
-                'free_shipping' => 'sometimes|boolean',
-                'cash_on_delivery' => 'sometimes|boolean',
-                'min_price' => 'sometimes|numeric|min:0',
-                'max_price' => 'sometimes|numeric|min:' . ($request->input('min_price') ?? 0),
-            ]);
+        $categoryId = null;
 
+
+        $price_max = 0;
+        $price_min = 0;
+        $brands = [];
+        $categories = [];
+
+        $validator = Validator::make($request->all(), [
+            'query' => 'sometimes|required|string|min:3',
+            'category' => 'sometimes',
+            'free_shipping' => 'sometimes|boolean',
+            'cash_on_delivery' => 'sometimes|in:true,false',
+            'min_price' => 'sometimes|numeric|min:0',
+            'max_price' => 'sometimes|numeric|min:' . ($request->input('min_price') ?? 0),
+            'brands' => [
+                'sometimes',
+                'string',
+                function ($attribute, $value, $fail) {
+                    $brandsValidate = explode(',', $value);
+
+                    // Add additional validation for each brand if necessary
+                    foreach ($brandsValidate as $brand) {
+                        // Check if each brand meets your validation criteria
+                        if (!ctype_alnum(str_replace(['_', ' ', '-'], '', html_entity_decode($brand)))) {
+                            $fail($attribute . ' contains invalid characters.');
+                        }
+                    }
+                },
+            ],
+        ]);
+        try {
             $validator->validate();
 
-            $query = $request->input('query');
+            if (empty(trim($request->input('query')))) {
+                $results = Product::inRandomOrder()
+                    ->join('categories', 'products.category_id', '=', 'categories.id')
+                    ->select('products.*', 'categories.category_name as category');
 
-            $results = Product::where(function ($queryBuilder) use ($query) {
-                $queryBuilder->where('name', 'like', "%$query%")
-                    ->orWhere('description', 'like', "%$query%");
-            });
+            } else {
+
+                $query = $request->input('query');
+
+                $results = Product::where(function ($queryBuilder) use ($query) {
+                    $queryBuilder->where('products.product_name', 'like', "%$query%")
+                        ->orWhere('products.tags', 'like', "%$query%")
+                        ->orWhere('products.brand', 'like', "%$query%")
+                        ->orWhere('products.description', 'like', "%$query%");
+                })
+                    ->join('categories', 'products.category_id', '=', 'categories.id')
+                    ->select('products.*', 'categories.category_name as category');
+
+            }
+
 
             if ($request->has('category')) {
-                $category = $request->input('category');
-                $results->where('category_id', $category);
+                $categories = $this->fetchCategories($request->input('category'));
+                if ($categories) {
+
+                    $categoryId = $categories->first()['id'];
+                    $results->where('category_id', $categoryId);
+                }
             }
+
+
+
+            if ($request->has('brands')) {
+                $brandsearch = explode(',', $request->query('brands'));
+
+                $results->where(function ($query) use ($brandsearch) {
+                    foreach ($brandsearch as $brand) {
+
+                        $query->orWhere('products.brand', 'like', "%$brand%");
+                    }
+                });
+            }
+
 
             if ($request->has('free_shipping')) {
                 $freeShipping = $request->input('free_shipping');
@@ -321,13 +384,31 @@ class ProductController extends Controller
                 $maxPrice = $request->input('max_price');
                 $results->whereBetween('sales_price', [$minPrice, $maxPrice]);
             }
+            // }
 
-            $results = $results->get();
+            $resultVal = $results->get();
+            $totalresult = count($results->get());
 
+
+            if ($totalresult > 0) {
+
+                $price_min = $this->getPrice($results)->min('sales_price');
+                $price_max = $this->getPrice($results)->max('sales_price');
+                $brands = $this->fetchProductBrands($results);
+                $categories = $this->getProductCategories($results);
+            }
             return response()->json([
                 'status' => 'success',
                 'message' => 'Search results retrieved successfully',
-                'data' => $results,
+                'data' => [
+                    'products' => $resultVal,
+                    'brands' => $brands,
+                    'price_min' => round($price_min),
+                    'price_max' => round($price_max),
+                    "products_found" => $totalresult,
+                    "categories" => $categories
+                ],
+
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -339,7 +420,22 @@ class ProductController extends Controller
         }
     }
 
+    private function fetchProductBrands($result)
+    {
+        return $result->select('brand')->distinct()->get();
 
+
+    }
+
+    private function getPrice($products)
+    {
+        return $products->select('products.id', 'products.sales_price')->orderBy('products.id', 'asc')->get();
+    }
+
+    private function getProductCategories($products)
+    {
+        return $products->select('products.category_id', 'categories.category_name')->distinct()->get();
+    }
 
     public function similarProduct($productId)
     {

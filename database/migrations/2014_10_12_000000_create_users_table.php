@@ -27,8 +27,12 @@ class CreateUsersTable extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->unsignedBigInteger('default_address_id')->nullable();
             $table->rememberToken();
             $table->timestamps();
+
+
+            $table->foreign('default_address_id')->references('id')->on('addresses')->onDelete('set null');
         });
     }
 

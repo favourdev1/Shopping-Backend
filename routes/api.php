@@ -11,7 +11,7 @@ use App\Http\Controllers\Api\WishlistController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\UsersController;
 use App\Http\Controllers\Api\CartController;
-
+use App\Http\Controllers\Api\AddressController;
 
 
 /*
@@ -62,16 +62,21 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/{user}', [UsersController::class, 'showProfile']);
         Route::put('/update', [UsersController::class, 'updateProfile']);
     });
-
-
+    
+    
     Route::prefix('carts')->group(function () {
         Route::get('/', [CartController::class, 'index']);
         Route::post('/add/{user}', [CartController::class, 'addOrUpdateCartItem']);
         Route::put('/update/{cart}', [CartController::class, 'update']);
         Route::delete('/delete/{cart}', [CartController::class, 'destroy']);
     });
-
-
+    
+    
+    Route::prefix('addresses')->group(function (){
+        Route::get('/', [AddressController::class, 'index']);
+        Route::post('/add/{user}',[AddressController::class, 'store']);
+        Route::put('/update',[AddressController::class,'update']);
+    });
 
 
 
