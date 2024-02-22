@@ -111,12 +111,13 @@ class CartController extends Controller
         ]);
     }
 
-    public function destroy($cartId)
+    public function destroy($cartId, $userId)
     {
 
         try {
-            $cart = Cart::findOrFail($cartId);
-            $cart->delete();
+            $deleted = Cart::where('id', $cartId)
+                ->where('user_id', $userId)
+                ->delete();
 
             return response()->json([
                 'status' => 'success',
@@ -140,13 +141,16 @@ class CartController extends Controller
 
 
 
-
     public function addOrUpdateCartItem(Request $request, User $user)
     {
+
+
+
+
         try {
             $validator = Validator::make($request->all(), [
                 'product_id' => 'required|exists:products,id',
-                'quantity' => 'required|integer|min:1',
+                'quantity' => 'required|numeric|min:0',
             ]);
 
             if ($validator->fails()) {
@@ -165,31 +169,50 @@ class CartController extends Controller
                     'message' => 'Product not found',
                 ], 404);
             }
-
             // Check if the product is already in the user's cart
             $existingCartItem = $user->carts()->where('product_id', $product->id)->first();
 
-            if ($existingCartItem) {
-                // If the product is already in the cart, update the quantity
-                $newQuantity = $existingCartItem->quantity + $request->input('quantity');
 
-                // Ensure the updated quantity is not more than the quantity_in_stock
-                if ($newQuantity > $product->quantity_in_stock) {
+
+
+            if ($existingCartItem) {
+
+                $cartId = $existingCartItem->id;
+                $userId = $existingCartItem->user_id;
+                if ($request->input('quantity') == '0') {
+
+                    $this->destroy($cartId, $userId);
+
                     return response()->json([
-                        'status' => 'error',
-                        'message' => 'Quantity exceeds available stock',
-                    ], 422);
+                        'status' => 'success',
+                        'message' => 'Cart item deleted successfully',
+                        'data' => [],
+                    ]);
+                } else {
+
+                    // If the product is already in the cart, update the quantity
+                    // $newQuantity = $existingCartItem->quantity + $request->input('quantity');
+                    $newQuantity = $request->input('quantity');
+
+                    // Ensure the updated quantity is not more than the quantity_in_stock
+                    if ($newQuantity > $product->quantity_in_stock) {
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Quantity exceeds available stock',
+                        ], 422);
+                    }
+
+                    $existingCartItem->update([
+                        'quantity' => $newQuantity,
+                    ]);
+
+                    return response()->json([
+                        'status' => 'success',
+                        'message' => 'Cart item updated successfully',
+                        'data' => $existingCartItem,
+                    ]);
                 }
 
-                $existingCartItem->update([
-                    'quantity' => $newQuantity,
-                ]);
-
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Cart item updated successfully',
-                    'data' => $existingCartItem,
-                ]);
             }
 
             // If the product is not in the cart, create a new cart item
@@ -213,8 +236,19 @@ class CartController extends Controller
 
 
 
-    public function checkout(User $user)
+    public function checkout(Request $request)
     {
+        #validate the request
+        $request->validate([
+            #adddess has to be in the address table 
+            'address' => 'required|exists:addresses,id',
+            'payment_method' => 'required|in:card,transfer',
+            'delivery_instructions' => 'nullable|string',
+        ]);
+
+        
+        $user = Auth::user();
+
         try {
             // Get the user's cart items
             $cartItems = $user->carts()
@@ -260,63 +294,65 @@ class CartController extends Controller
 
 
 
-    private function calculateTotalCost($cartItems)
-    {
-        // Calculate the total cost based on product prices and quantities
-        $subTotal = 0;
-        foreach ($cartItems as $cartItem) {
-            $subTotal += $cartItem->price * $cartItem->quantity;
-        }
 
-        // Call DHL API to get shipping cost
-        $shippingCost = $this->getDHLShippingCost($cartItems);
 
-        // Add the shipping cost to the total
-        $totalCost = $subTotal + $shippingCost;
 
-        return $totalCost;
+
+    // Function to calculate distance using Vincenty formula
+    function vincentyGreatCircleDistance(
+        $latitudeFrom,
+        $longitudeFrom,
+        $latitudeTo,
+        $longitudeTo,
+        $earthRadius = 6371000
+    ) {
+        // Convert latitude and longitude from degrees to radians
+        $latFrom = deg2rad($latitudeFrom);
+        $lonFrom = deg2rad($longitudeFrom);
+        $latTo = deg2rad($latitudeTo);
+        $lonTo = deg2rad($longitudeTo);
+
+        // Calculate differences
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
+
+        // Vincenty formula for distance
+        $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) +
+            cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
+
+        // Distance calculation
+        $distance = $angle * $earthRadius;
+
+        return $distance;
     }
 
-    private function getDHLShippingCost($cartItems)
+    // Function to get latitude and longitude from address using OpenStreetMap Nominatim API
+    function getCoordinatesFromAddress($address)
     {
-        // Replace 'your-api-key' with your actual DHL API key
-        $apiKey = env('DHL_API_KEY');
+        // Encode the address for use in URL
+        $encodedAddress = urlencode($address);
 
-        // DHL API endpoint for shipping rate calculation
-        $apiEndpoint = 'https://api.dhl.com/ship/quote';
+        // Construct the API URL
+        $apiUrl = "https://nominatim.openstreetmap.org/search?q={$encodedAddress}&format=json";
 
-        // Prepare payload for the API request
-        $payload = [
-            'shipper' => [
-                // Add shipper details
-            ],
-            'recipient' => [
-                'address' => [
-                    'countryCode' => 'US', // Adjust based on the recipient's country
-                    // Add other address details
-                ],
-            ],
-            'packages' => [],
-        ];
-
-        // Prepare package details based on cart items
-        foreach ($cartItems as $cartItem) {
-            $payload['packages'][] = [
-                'weight' => $cartItem->weight,
-                // Add other package details
-            ];
-        }
-
-        // Make the API request
-        $response = Http::withHeaders(['DHL-API-Key' => $apiKey])->post($apiEndpoint, $payload);
+        // Make a GET request to the API
+        $response = file_get_contents($apiUrl);
 
         // Decode the JSON response
-        $apiResponse = $response->json();
+        $data = json_decode($response, true);
 
-        // You may need to handle errors and extract relevant information from the API response
-        // In this example, assuming the API returns a 'shippingCost' key
-        $shippingCost = $apiResponse['shippingCost'] ?? 0;
-
-        return $shippingCost;
+        // Check if response contains any results
+        if (!empty($data) && isset($data[0]['lat']) && isset($data[0]['lon'])) {
+            // Extract latitude and longitude from the first result
+            $latitude = $data[0]['lat'];
+            $longitude = $data[0]['lon'];
+            return [$latitude, $longitude];
+        } else {
+            // No results found
+            return null;
+        }
     }
+
+
+
 }

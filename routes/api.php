@@ -50,6 +50,9 @@ Route::middleware(['shoppingGuest'])->group(function () {
         Route::get('/{category}', [CategoryController::class, 'show']);
     });
 
+    Route::prefix('group')->group(function(){
+        Route::get("/newArrivial",[ProductController::class,"getNewArrivalsAutomatically"]);
+    });
 });
 
 
@@ -61,14 +64,15 @@ Route::middleware('auth:api')->group(function () {
     Route::prefix('profile')->group(function () {
         Route::get('/{user}', [UsersController::class, 'showProfile']);
         Route::put('/update', [UsersController::class, 'updateProfile']);
+        
     });
     
     
     Route::prefix('carts')->group(function () {
         Route::get('/', [CartController::class, 'index']);
         Route::post('/add/{user}', [CartController::class, 'addOrUpdateCartItem']);
-        Route::put('/update/{cart}', [CartController::class, 'update']);
-        Route::delete('/delete/{cart}', [CartController::class, 'destroy']);
+        Route::delete('/delete/{cart}/{userId}', [CartController::class, 'destroy']);
+        Route::get('/checkout', [CartController::class,'checkout']);
     });
     
     
@@ -76,6 +80,8 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/', [AddressController::class, 'index']);
         Route::post('/add/{user}',[AddressController::class, 'store']);
         Route::put('/update',[AddressController::class,'update']);
+        Route::get('/setDefault/{addressId}', [AddressController::class,'setDefaultddress']);
+        Route::delete('/delete/{address}', [AddressController::class, 'destroy']);
     });
 
 

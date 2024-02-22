@@ -301,6 +301,7 @@ class ProductController extends Controller
 
         $validator = Validator::make($request->all(), [
             'query' => 'sometimes|required|string|min:3',
+            'group' => 'sometimes|required|string|min:3',
             'category' => 'sometimes',
             'free_shipping' => 'sometimes|boolean',
             'cash_on_delivery' => 'sometimes|in:true,false',
@@ -325,25 +326,47 @@ class ProductController extends Controller
         try {
             $validator->validate();
 
-            if (empty(trim($request->input('query')))) {
-                $results = Product::inRandomOrder()
-                    ->join('categories', 'products.category_id', '=', 'categories.id')
-                    ->select('products.*', 'categories.category_name as category');
 
+            if (!$request->has('group') || empty($request->group)) {
+                if (empty(trim($request->input('query')))) {
+                    $results = Product::inRandomOrder()
+                        ->join('categories', 'products.category_id', '=', 'categories.id')
+                        ->select('products.*', 'categories.category_name as category');
+                    $results1 = Product::inRandomOrder()
+                        ->join('categories', 'products.category_id', '=', 'categories.id')
+                        ->select('products.*', 'categories.category_name as category');
+
+                } else {
+
+                    $query = $request->input('query');
+
+                    $results = Product::where(function ($queryBuilder) use ($query) {
+                        $queryBuilder->where('products.product_name', 'like', "%$query%")
+                            ->orWhere('products.tags', 'like', "%$query%")
+                            ->orWhere('products.brand', 'like', "%$query%")
+                            ->orWhere('products.description', 'like', "%$query%");
+                    })
+                        ->join('categories', 'products.category_id', '=', 'categories.id')
+                        ->select('products.*', 'categories.category_name as category');
+
+                    $results1 = Product::where(function ($queryBuilder) use ($query) {
+                        $queryBuilder->where('products.product_name', 'like', "%$query%")
+                            ->orWhere('products.tags', 'like', "%$query%")
+                            ->orWhere('products.brand', 'like', "%$query%")
+                            ->orWhere('products.description', 'like', "%$query%");
+                    })
+                        ->join('categories', 'products.category_id', '=', 'categories.id')
+                        ->select('products.*', 'categories.category_name as category');
+
+
+                }
             } else {
-
-                $query = $request->input('query');
-
-                $results = Product::where(function ($queryBuilder) use ($query) {
-                    $queryBuilder->where('products.product_name', 'like', "%$query%")
-                        ->orWhere('products.tags', 'like', "%$query%")
-                        ->orWhere('products.brand', 'like', "%$query%")
-                        ->orWhere('products.description', 'like', "%$query%");
-                })
-                    ->join('categories', 'products.category_id', '=', 'categories.id')
-                    ->select('products.*', 'categories.category_name as category');
-
+                if ($request->group == 'new_arrivals') {
+                    $results = $this->getNewArrivalsAutomatically();
+                    $results1 = $this->getNewArrivalsAutomatically();
+                }
             }
+
 
 
             if ($request->has('category')) {
@@ -392,10 +415,10 @@ class ProductController extends Controller
 
             if ($totalresult > 0) {
 
-                $price_min = $this->getPrice($results)->min('sales_price');
-                $price_max = $this->getPrice($results)->max('sales_price');
-                $brands = $this->fetchProductBrands($results);
-                $categories = $this->getProductCategories($results);
+                $price_min = $this->getPrice($results1)->min('sales_price');
+                $price_max = $this->getPrice($results1)->max('sales_price');
+                $brands = $this->fetchProductBrands($results1);
+                $categories = $this->getProductCategories($results1);
             }
             return response()->json([
                 'status' => 'success',
@@ -467,4 +490,19 @@ class ProductController extends Controller
         ]);
     }
 
+
+
+
+
+
+    public function getNewArrivalsAutomatically()
+    {
+        $newArrivals = Product::join('categories', 'products.category_id', '=', 'categories.id')
+        ->select('products.*', 'categories.category_name as category')
+        ->orderBy('products.created_at', 'desc')
+        ->take(10);
+
+
+        return $newArrivals;
+    }
 }
