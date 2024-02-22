@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
-
+use App\Models\Address;
 
 class CartController extends Controller
 {
@@ -143,10 +143,6 @@ class CartController extends Controller
 
     public function addOrUpdateCartItem(Request $request, User $user)
     {
-
-
-
-
         try {
             $validator = Validator::make($request->all(), [
                 'product_id' => 'required|exists:products,id',
@@ -235,6 +231,20 @@ class CartController extends Controller
     }
 
 
+    function calculateShippingCharge($userAddress, $adminAddress)
+    {
+        $userCoordinates = $this->getCoordinatesFromAddress($userAddress->delivery_address);
+        $adminCoordinates = $this->getCoordinatesFromAddress($adminAddress->delivery_address);
+
+        if (!$userCoordinates || !$adminCoordinates) {
+            $distance = $this->vincentyGreatCircleDistance($userCoordinates, $adminCoordinates);
+            // Calculate shipping charge based on the distance
+            // Add your shipping charge calculation logic here
+            // Return the calculated shipping charge
+        }
+        // Return default shipping charge if coordinates are not available
+        return 0;
+    }
 
     public function checkout(Request $request)
     {
@@ -246,7 +256,7 @@ class CartController extends Controller
             'delivery_instructions' => 'nullable|string',
         ]);
 
-        
+
         $user = Auth::user();
 
         try {
@@ -288,10 +298,14 @@ class CartController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
+
+
     }
-
-
-
+    # function to get the selected address that from an id
+    public function getAddress($addressId)
+    {
+        return Address::find($addressId);
+    }
 
 
 
@@ -300,13 +314,16 @@ class CartController extends Controller
 
     // Function to calculate distance using Vincenty formula
     function vincentyGreatCircleDistance(
-        $latitudeFrom,
-        $longitudeFrom,
-        $latitudeTo,
-        $longitudeTo,
+        $userCoordinates,
+        $adminCoordinates,
         $earthRadius = 6371000
     ) {
         // Convert latitude and longitude from degrees to radians
+        $latitudeFrom = $userCoordinates['latitude'];
+        $longitudeFrom = $userCoordinates['longitude'];
+        $latitudeTo = $adminCoordinates['latitude'];
+        $longitudeTo = $adminCoordinates['longitude'];
+
         $latFrom = deg2rad($latitudeFrom);
         $lonFrom = deg2rad($longitudeFrom);
         $latTo = deg2rad($latitudeTo);
@@ -354,5 +371,6 @@ class CartController extends Controller
     }
 
 
-
 }
+
+
