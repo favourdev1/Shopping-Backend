@@ -12,7 +12,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\UsersController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\AddressController;
-
+use App\Http\Controllers\Api\PaymentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -67,12 +67,15 @@ Route::middleware('auth:api')->group(function () {
         
     });
     
+    Route::get('/generate-order-id', [PaymentController::class, 'generateOrderId']);
+
     
     Route::prefix('carts')->group(function () {
         Route::get('/', [CartController::class, 'index']);
         Route::post('/add/{user}', [CartController::class, 'addOrUpdateCartItem']);
         Route::delete('/delete/{cart}/{userId}', [CartController::class, 'destroy']);
         Route::get('/checkout', [CartController::class,'checkout']);
+        Route::post('/shippingCost',[CartController::class, 'calculateShippingCost']);
     });
     
     
@@ -127,6 +130,7 @@ Route::middleware('auth:api')->group(function () {
     });
 
 
+    
 
 
 });

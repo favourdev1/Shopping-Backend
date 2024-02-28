@@ -14,10 +14,23 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->decimal('total_amount', 10, 2); // Add more fields as needed
+            $table->decimal('total_amount', 10, 2);
             $table->timestamps();
-    
+
+            $table->string('order_number');
+            $table->string('order_status');
+            $table->string('payment_status');
+            $table->string('shipping_status');
+                     
+            $table->string('status');
+            $table->text('shipping_address');
+            $table->string('payment_method');
+            $table->string('billing_address');
+            $table->string('phone_number');
+            $table->string('email');
+            $table->text('notes');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            // Add more fields as needed
         });
     }
 

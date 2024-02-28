@@ -13,9 +13,16 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use App\Models\Address;
+use App\Models\AdminSettings;
 
 class CartController extends Controller
 {
+
+    // ensure that user is authenticated before accesing this 
+    public function __construct()
+    {
+        $this->middleware('auth:api');
+    }
     public function index()
     {
         $user = Auth::user();
@@ -231,31 +238,98 @@ class CartController extends Controller
     }
 
 
-    function calculateShippingCharge($userAddress, $adminAddress)
-    {
-        $userCoordinates = $this->getCoordinatesFromAddress($userAddress->delivery_address);
-        $adminCoordinates = $this->getCoordinatesFromAddress($adminAddress->delivery_address);
 
-        if (!$userCoordinates || !$adminCoordinates) {
-            $distance = $this->vincentyGreatCircleDistance($userCoordinates, $adminCoordinates);
-            // Calculate shipping charge based on the distance
-            // Add your shipping charge calculation logic here
-            // Return the calculated shipping charge
-        }
-        // Return default shipping charge if coordinates are not available
-        return 0;
-    }
-
-    public function checkout(Request $request)
+    public function calculateShippingCost(Request $request)
     {
-        #validate the request
-        $request->validate([
-            #adddess has to be in the address table 
+        $validator = Validator::make($request->all(), [
             'address' => 'required|exists:addresses,id',
-            'payment_method' => 'required|in:card,transfer',
-            'delivery_instructions' => 'nullable|string',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $address = $this->getAddress($request->address);
+
+        $userAddress = $this->formatAddress($address);
+
+        $shippingCost = $this->EstimatedShippingCharge($userAddress);
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Shipping cost calculated successfully',
+            'data' => ['shipping_cost'=>$shippingCost],
+        ]);
+
+    }
+
+    
+    public function EstimatedShippingCharge($userAddress)
+    {
+
+        $shippingCharge = 0;
+        $totalItems = 0;
+        $estimatedCostOnItems = 0;
+        $costOnItems = 0.2; // 20 cents per item
+
+        $user = Auth::user();
+        $cartItems = $user->carts()
+            ->join('products', 'carts.product_id', '=', 'products.id')
+            ->select('carts.id as cart_id', 'carts.quantity', 'carts.user_id', 'products.*')
+            ->get();
+
+        $totalItems = $cartItems->sum('quantity');
+
+        if ($totalItems > 3) {
+            $estimatedCostOnItems = $totalItems * $costOnItems;
+        }
+
+        $userCoordinates = $this->getCoordinatesFromAddress($userAddress);
+        $adminSettings = AdminSettings::first();
+        $adminAddress= $this->formatAdminAddress($adminSettings);
+        $adminCoordinates = $this->getCoordinatesFromAddress($adminAddress);
+
+       
+        if ($userCoordinates && $adminCoordinates) {
+            $distance = $this->vincentyGreatCircleDistance($userCoordinates, $adminCoordinates);
+
+
+            // if distance is above 10km, calculate shipping charge
+            if ($distance > 10) {
+                $shippingCharge =round(($distance * $adminSettings->shipping_cost_per_meter)/2,2);
+            }else{
+                // free shipping 
+                $shippingCharge = 0;
+            }
+        }
+
+        return $shippingCharge + $estimatedCostOnItems;
+    }
+
+
+    // Function to handle the checkout process
+    public function checkout(Request $request)
+    {
+        // Validate the request
+        $validator = Validator::make($request->all(), [
+            'address' => 'required|exists:addresses,id', // Address must exist in the addresses table
+            'payment_method' => 'required|in:card,transfer', // Payment method must be either 'card' or 'transfer'
+            'delivery_instructions' => 'nullable|string', // Delivery instructions, if provided, must be a string
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        // Calculate the shipping charge based on the selected address
+        $address = $this->getAddress($request->address);
+        $shippingCharge = $this->EstimatedShippingCharge($address);
 
         $user = Auth::user();
 
@@ -266,7 +340,7 @@ class CartController extends Controller
                 ->select('carts.id as cart_id', 'carts.quantity', 'carts.user_id', 'products.*')
                 ->get();
 
-            // Calculate the total cost including DHL shipping cost
+            // Calculate the total cost including shipping charge
             $totalCost = $this->calculateTotalCost($cartItems);
 
             // Create an order
@@ -298,13 +372,12 @@ class CartController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
-
-
     }
-    # function to get the selected address that from an id
+        
+    
     public function getAddress($addressId)
     {
-        return Address::find($addressId);
+        return Address::find($addressId)->first();
     }
 
 
@@ -312,65 +385,83 @@ class CartController extends Controller
 
 
 
+
+    // Function to get coordinates from an address using LocationIQ API
+    function getCoordinatesFromAddress($formattedAddress)
+    {
+        // Get the Geoapify API key from the environment variables
+
+        $apiKey = env('GEOAPIFY_API_KEY');
+
+        // Concatenate the delivery address, city, and state
+
+        // Encode the address for use in the API request
+        $encodedAddress = urlencode($formattedAddress);
+
+
+        // Construct the API URL
+        $apiUrl = "https://api.geoapify.com/v1/geocode/search?text={$encodedAddress}&apiKey={$apiKey}";
+
+        // Make a GET request to the API
+        $response = Http::get($apiUrl);
+
+        // Decode the JSON response
+        $data = $response->json();
+
+        // Check if response contains any results
+        if (is_array($data) && !empty($data['features']) && isset($data['features'][0]['geometry']['coordinates'])) {
+            // Extract latitude and longitude from the first result
+            $latitude = $data['features'][0]['geometry']['coordinates'][1];
+            $longitude = $data['features'][0]['geometry']['coordinates'][0];
+
+
+            return [
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+            ];
+        } else {
+            // No results found
+            return [];
+        }
+    }
+
+    
+    //use vincenty algorithm to calculate distance
     // Function to calculate distance using Vincenty formula
-    function vincentyGreatCircleDistance(
-        $userCoordinates,
-        $adminCoordinates,
-        $earthRadius = 6371000
-    ) {
-        // Convert latitude and longitude from degrees to radians
-        $latitudeFrom = $userCoordinates['latitude'];
-        $longitudeFrom = $userCoordinates['longitude'];
-        $latitudeTo = $adminCoordinates['latitude'];
-        $longitudeTo = $adminCoordinates['longitude'];
+    function vincentyGreatCircleDistance($userCoordinates, $adminCoordinates)
+    {
+        $lat1 = deg2rad($userCoordinates['latitude']);
+        $lon1 = deg2rad($userCoordinates['longitude']);
+        $lat2 = deg2rad($adminCoordinates['latitude']);
+        $lon2 = deg2rad($adminCoordinates['longitude']);
 
-        $latFrom = deg2rad($latitudeFrom);
-        $lonFrom = deg2rad($longitudeFrom);
-        $latTo = deg2rad($latitudeTo);
-        $lonTo = deg2rad($longitudeTo);
+        // radius in kilometers
+        $earthRadius = 6371;
 
-        // Calculate differences
-        $latDelta = $latTo - $latFrom;
-        $lonDelta = $lonTo - $lonFrom;
+        $deltaLon = $lon2 - $lon1;
 
-        // Vincenty formula for distance
-        $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) +
-            cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
+        $numerator = sqrt(pow(cos($lat2) * sin($deltaLon), 2) + pow(cos($lat1) * sin($lat2) - sin($lat1) * cos($lat2) * cos($deltaLon), 2));
+        $denominator = sin($lat1) * sin($lat2) + cos($lat1) * cos($lat2) * cos($deltaLon);
 
-        // Distance calculation
-        $distance = $angle * $earthRadius;
+        $angle = atan2($numerator, $denominator);
+
+        $distance = $earthRadius * $angle;
 
         return $distance;
     }
 
-    // Function to get latitude and longitude from address using OpenStreetMap Nominatim API
-    function getCoordinatesFromAddress($address)
+
+    // function to format user address 
+    public function formatAddress($address)
     {
-        // Encode the address for use in URL
-        $encodedAddress = urlencode($address);
+        return $address['delivery_address'] . ', ' . $address['city'] . ', ' . $address['state'] . ', ' . $address['country'] ;
+    }
 
-        // Construct the API URL
-        $apiUrl = "https://nominatim.openstreetmap.org/search?q={$encodedAddress}&format=json";
-
-        // Make a GET request to the API
-        $response = file_get_contents($apiUrl);
-
-        // Decode the JSON response
-        $data = json_decode($response, true);
-
-        // Check if response contains any results
-        if (!empty($data) && isset($data[0]['lat']) && isset($data[0]['lon'])) {
-            // Extract latitude and longitude from the first result
-            $latitude = $data[0]['lat'];
-            $longitude = $data[0]['lon'];
-            return [$latitude, $longitude];
-        } else {
-            // No results found
-            return null;
-        }
+    //function to format admin address
+    public function formatAdminAddress($adminAddress)
+    {
+        return $adminAddress['office_address'];
     }
 
 
 }
-
-
