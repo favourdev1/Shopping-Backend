@@ -29,30 +29,33 @@ class AddressController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'data' => ['addresses' => $userAddresses]
+                'data' => ['addresses' => $userAddresses],
             ]);
         } else {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'User not authenticated.'
-            ], 401);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'User not authenticated.',
+                ],
+                401,
+            );
         }
     }
-
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-
         if ($this->getTotalAddressForUser() > $this->defaultTotalAddress) {
-            return response()->json([
-                'status' => 'errror',
-                'message' => 'You can only add a total of 5 addresses!'
-            ], 422);
+            return response()->json(
+                [
+                    'status' => 'errror',
+                    'message' => 'You can only add a total of 5 addresses!',
+                ],
+                422,
+            );
         }
-
 
         try {
             $user = auth()->user();
@@ -67,41 +70,44 @@ class AddressController extends Controller
                 // 'country' => 'required',
                 'defaut_address' => 'string',
                 'phone_number_1' => 'required',
-                'phone_number_2' => 'required',
-
+                'phone_number_2' => 'sometimes',
             ]);
 
             $address = $user->Address()->create($addressData);
 
-            if ($request->has('default_address')) {
-                // $address->id contains the ID of the newly created address
-                $newlyCreatedAddressId = $address->id;
-                $this->setDefaultAddress($newlyCreatedAddressId);
-
+            //check if the address is the first one for this user , if yess make it the default
+            if ($this->getTotalAddressForUser() === 1) {
+                $this->setDefaultAddress($address->id);
+            } else {
+                if ($request->has('default_address')) {
+                    // $address->id contains the ID of the newly created address
+                    $newlyCreatedAddressId = $address->id;
+                    $this->setDefaultAddress($newlyCreatedAddressId);
+                }
             }
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Address added successfully',
-                'address' => $address
-            ], 201);
-
+            return response()->json(
+                [
+                    'status' => 'success',
+                    'message' => 'Address added successfully',
+                    'address' => $address,
+                ],
+                201,
+            );
         } catch (\Exception $e) {
             return response()->json(
                 [
                     'status' => 'error',
-                    'message' => $e->getMessage()
-                ]
-                ,
-                409
+                    'message' => $e->getMessage(),
+                ],
+                409,
             );
-
         }
     }
 
     public function getTotalAddressForUser()
     {
-        return auth::user()->Address()->count();
+        return Auth::user()->address()->count();
     }
     /**
      * Update the specified address.
@@ -125,8 +131,7 @@ class AddressController extends Controller
                 'postal_code' => 'required',
                 // 'country' => 'required',
                 'phone_number_1' => 'required',
-                'phone_number_2' => 'required'
-
+                'phone_number_2' => 'required',
             ]);
 
             // Ensure the address belongs to the authenticated user
@@ -142,22 +147,22 @@ class AddressController extends Controller
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 409);
         }
     }
-    
-
-
 
     public function setDefaultAddress($addressId)
     {
-        $user = auth()->user();
+        $user = Auth()->user();
 
         // Validate that the address belongs to the user
-        $address = $user->addresses()->find($addressId);
+        $address = $user->address()->find($addressId);
 
         if (!$address) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Address not found or does not belong to the user.',
-            ], 404);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'Address not found or does not belong to the user.',
+                ],
+                404,
+            );
         }
 
         // Update the default address in the users table
@@ -168,7 +173,6 @@ class AddressController extends Controller
             'message' => 'Default address updated successfully.',
         ]);
     }
-
 
     /**
      * Remove the specified address from storage.
@@ -188,6 +192,12 @@ class AddressController extends Controller
 
             // Delete the address
             $address->delete();
+
+            // check if there is any address left for the user and set the first one as the default
+            if ($this->getTotalAddressForUser() > 0) {
+                $user->update(['default_address_id' => $user->address()->first()->id]);
+            }
+            
 
             return response()->json(['status' => 'success', 'message' => 'Address deleted successfully'], 200);
         } catch (\Exception $e) {

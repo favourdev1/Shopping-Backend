@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Payment;
 
+use App\Models\PaymentMethod;
+
 class PaymentController extends Controller
 {
     public function index()

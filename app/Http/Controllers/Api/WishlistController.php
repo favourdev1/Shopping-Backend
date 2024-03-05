@@ -14,12 +14,23 @@ class WishlistController extends Controller
     public function index()
     {
         $user = Auth::user();
+        
+        // Fetch all user wishlist
+        $wishlist = $user->wishLists()
+        ->join('products','products.id','=','wishlists.product_id')->get();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User wishlist fetched successfully',
+            'data' => $wishlist,
+        ]);
     }
 
 
 
-    public function addOrDelete(Request $request, User $user)
+    public function addOrDelete(Request $request)
     {
+        $user= auth()->user();
         try {
             $validator = Validator::make($request->all(), [
                 'product_id' => 'required|exists:products,id',

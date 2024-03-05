@@ -7,7 +7,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 // use Laravel\passport\HasApiTokens;
 use Laravel\Passport\HasApiTokens;
-
+use Illuminate\Database\Eloquent\Model;
+use App\Models\Address;
 
 class User extends Authenticatable
 {
@@ -29,6 +30,7 @@ class User extends Authenticatable
         'profile_img',
         'email',
         'password',
+        'default_address_id',
         'is_admin'
     ];
 
@@ -61,6 +63,17 @@ class User extends Authenticatable
     public function address (){
         return $this->hasMany(Address::class);
     }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function wishlists()
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+    
 }
 
 

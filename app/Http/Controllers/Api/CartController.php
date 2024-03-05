@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
@@ -14,11 +13,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use App\Models\Address;
 use App\Models\AdminSettings;
+use App\Http\Controllers\Api\OrderController;
 
 class CartController extends Controller
 {
-
-    // ensure that user is authenticated before accesing this 
+    // ensure that user is authenticated before accesing this
     public function __construct()
     {
         $this->middleware('auth:api');
@@ -27,10 +26,7 @@ class CartController extends Controller
     {
         $user = Auth::user();
 
-        $cartItems = $user->carts()
-            ->join('products', 'carts.product_id', '=', 'products.id')
-            ->select('carts.id as cart_id', 'carts.quantity', 'carts.user_id', 'products.*')
-            ->get();
+        $cartItems = $user->carts()->join('products', 'carts.product_id', '=', 'products.id')->select('carts.id as cart_id', 'carts.quantity', 'carts.user_id', 'products.*')->get();
 
         return response()->json([
             'status' => 'success',
@@ -47,24 +43,33 @@ class CartController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors(),
-                ], 422);
+                return response()->json(
+                    [
+                        'status' => 'error',
+                        'message' => 'Validation failed',
+                        'errors' => $validator->errors(),
+                    ],
+                    422,
+                );
             }
 
             $product = Product::find($request->input('product_id'));
 
             if (!$product) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Product not found',
-                ], 404);
+                return response()->json(
+                    [
+                        'status' => 'error',
+                        'message' => 'Product not found',
+                    ],
+                    404,
+                );
             }
 
             // Check if the product is already in the user's cart
-            $existingCartItem = $user->carts()->where('product_id', $product->id)->first();
+            $existingCartItem = $user
+                ->carts()
+                ->where('product_id', $product->id)
+                ->first();
 
             if ($existingCartItem) {
                 // If the product is already in the cart, update the quantity
@@ -91,15 +96,15 @@ class CartController extends Controller
                 'data' => $cartItem,
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage(),
-            ], 404);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => $e->getMessage(),
+                ],
+                404,
+            );
         }
     }
-
-
-
 
     public function update(Request $request, Cart $cart)
     {
@@ -120,33 +125,32 @@ class CartController extends Controller
 
     public function destroy($cartId, $userId)
     {
-
         try {
-            $deleted = Cart::where('id', $cartId)
-                ->where('user_id', $userId)
-                ->delete();
+            $deleted = Cart::where('id', $cartId)->where('user_id', $userId)->delete();
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Cart item deleted successfully',
             ]);
-
         } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Cart item not found',
-            ], 404);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'Cart item not found',
+                ],
+                404,
+            );
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Error deleting cart item',
-                'error' => $e->getMessage(),
-            ], 500);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'Error deleting cart item',
+                    'error' => $e->getMessage(),
+                ],
+                500,
+            );
         }
     }
-
-
-
 
     public function addOrUpdateCartItem(Request $request, User $user)
     {
@@ -157,33 +161,37 @@ class CartController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors(),
-                ], 422);
+                return response()->json(
+                    [
+                        'status' => 'error',
+                        'message' => 'Validation failed',
+                        'errors' => $validator->errors(),
+                    ],
+                    422,
+                );
             }
 
             $product = Product::find($request->input('product_id'));
 
             if (!$product) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Product not found',
-                ], 404);
+                return response()->json(
+                    [
+                        'status' => 'error',
+                        'message' => 'Product not found',
+                    ],
+                    404,
+                );
             }
             // Check if the product is already in the user's cart
-            $existingCartItem = $user->carts()->where('product_id', $product->id)->first();
-
-
-
+            $existingCartItem = $user
+                ->carts()
+                ->where('product_id', $product->id)
+                ->first();
 
             if ($existingCartItem) {
-
                 $cartId = $existingCartItem->id;
                 $userId = $existingCartItem->user_id;
                 if ($request->input('quantity') == '0') {
-
                     $this->destroy($cartId, $userId);
 
                     return response()->json([
@@ -192,17 +200,19 @@ class CartController extends Controller
                         'data' => [],
                     ]);
                 } else {
-
                     // If the product is already in the cart, update the quantity
                     // $newQuantity = $existingCartItem->quantity + $request->input('quantity');
                     $newQuantity = $request->input('quantity');
 
                     // Ensure the updated quantity is not more than the quantity_in_stock
                     if ($newQuantity > $product->quantity_in_stock) {
-                        return response()->json([
-                            'status' => 'error',
-                            'message' => 'Quantity exceeds available stock',
-                        ], 422);
+                        return response()->json(
+                            [
+                                'status' => 'error',
+                                'message' => 'Quantity exceeds available stock',
+                            ],
+                            422,
+                        );
                     }
 
                     $existingCartItem->update([
@@ -215,7 +225,6 @@ class CartController extends Controller
                         'data' => $existingCartItem,
                     ]);
                 }
-
             }
 
             // If the product is not in the cart, create a new cart item
@@ -230,14 +239,15 @@ class CartController extends Controller
                 'data' => $cartItem,
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage(),
-            ], 500);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => $e->getMessage(),
+                ],
+                500,
+            );
         }
     }
-
-
 
     public function calculateShippingCost(Request $request)
     {
@@ -246,10 +256,13 @@ class CartController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validator->errors()->first(),
-            ], 422);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => $validator->errors()->first(),
+                ],
+                422,
+            );
         }
 
         $address = $this->getAddress($request->address);
@@ -257,29 +270,23 @@ class CartController extends Controller
         $userAddress = $this->formatAddress($address);
 
         $shippingCost = $this->EstimatedShippingCharge($userAddress);
-        
+
         return response()->json([
             'status' => 'success',
             'message' => 'Shipping cost calculated successfully',
-            'data' => ['shipping_cost'=>$shippingCost],
+            'data' => ['shipping_cost' => $shippingCost],
         ]);
-
     }
 
-    
     public function EstimatedShippingCharge($userAddress)
     {
-
         $shippingCharge = 0;
         $totalItems = 0;
         $estimatedCostOnItems = 0;
         $costOnItems = 0.2; // 20 cents per item
 
         $user = Auth::user();
-        $cartItems = $user->carts()
-            ->join('products', 'carts.product_id', '=', 'products.id')
-            ->select('carts.id as cart_id', 'carts.quantity', 'carts.user_id', 'products.*')
-            ->get();
+        $cartItems = $user->carts()->join('products', 'carts.product_id', '=', 'products.id')->select('carts.id as cart_id', 'carts.quantity', 'carts.user_id', 'products.*')->get();
 
         $totalItems = $cartItems->sum('quantity');
 
@@ -289,19 +296,17 @@ class CartController extends Controller
 
         $userCoordinates = $this->getCoordinatesFromAddress($userAddress);
         $adminSettings = AdminSettings::first();
-        $adminAddress= $this->formatAdminAddress($adminSettings);
+        $adminAddress = $this->formatAdminAddress($adminSettings);
         $adminCoordinates = $this->getCoordinatesFromAddress($adminAddress);
 
-       
         if ($userCoordinates && $adminCoordinates) {
             $distance = $this->vincentyGreatCircleDistance($userCoordinates, $adminCoordinates);
 
-
             // if distance is above 10km, calculate shipping charge
             if ($distance > 10) {
-                $shippingCharge =round(($distance * $adminSettings->shipping_cost_per_meter)/2,2);
-            }else{
-                // free shipping 
+                $shippingCharge = round(($distance * $adminSettings->shipping_cost_per_meter) / 2, 2);
+            } else {
+                // free shipping
                 $shippingCharge = 0;
             }
         }
@@ -309,56 +314,76 @@ class CartController extends Controller
         return $shippingCharge + $estimatedCostOnItems;
     }
 
-
     // Function to handle the checkout process
     public function checkout(Request $request)
     {
-        // Validate the request
         $validator = Validator::make($request->all(), [
-            'address' => 'required|exists:addresses,id', // Address must exist in the addresses table
-            'payment_method' => 'required|in:card,transfer', // Payment method must be either 'card' or 'transfer'
-            'delivery_instructions' => 'nullable|string', // Delivery instructions, if provided, must be a string
+            'address' => 'required|exists:addresses,id',
+            'payment_method' => 'required|in:card,cash on delivery,bank transfer',
+            'delivery_instructions' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validator->errors()->first(),
-            ], 422);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => $validator->errors()->first(),
+                ],
+                422,
+            );
         }
 
-        // Calculate the shipping charge based on the selected address
         $address = $this->getAddress($request->address);
         $shippingCharge = $this->EstimatedShippingCharge($address);
+        $orderController = new OrderController();
 
         $user = Auth::user();
-
+        $userId = $user->id;
+        $tax = 0;
         try {
-            // Get the user's cart items
-            $cartItems = $user->carts()
-                ->join('products', 'carts.product_id', '=', 'products.id')
-                ->select('carts.id as cart_id', 'carts.quantity', 'carts.user_id', 'products.*')
-                ->get();
+            $cartItems = $user->carts()->join('products', 'carts.product_id', '=', 'products.id')->select('carts.id as cart_id', 'carts.quantity', 'carts.user_id', 'products.*')->get();
 
-            // Calculate the total cost including shipping charge
-            $totalCost = $this->calculateTotalCost($cartItems);
+            $totalCost = $cartItems->sum(function ($cartItem) {
+                $tax = $cartItem->tax;
+                return $cartItem->sales_price * $cartItem->quantity + $cartItem->tax;
+            });
 
-            // Create an order
-            $order = $user->orders()->create([
-                'total_amount' => $totalCost,
-                // Add more order details as needed
-            ]);
+            $totalCost += $shippingCharge;
+$orderId = $orderController->generateOrderId();
+$note = $request->delivery_instructions;
+if (empty($note)) {
+    $note = '';
+}
+            
+         
+$order = $user->orders()->create([
+    'total_amount' => $totalCost,
+    'shipping_charge' => $shippingCharge,
+    'payment_method' => $request->payment_method,
+    'notes' => $note,
+    'status' => 'pending',
+    'shipping_address' => $address->delivery_address,
+    'billing_address' => $address->delivery_address,
+    'email' => $user->email,
+    'order_number' => $orderId,
+    'user_id' => $userId,
+    'payment_status' => 'pending',
+    'delivery_status' => 'pending',
+    'order_status' => 'pending',
+    'tax' => $tax,
+]);
 
-            // Move cart items to the order
+         
+
             foreach ($cartItems as $cartItem) {
                 $order->orderItems()->create([
-                    'product_id' => $cartItem->product_id,
+                    'product_id' => $cartItem->id,
+                    'price' => $cartItem->sales_price,
+
                     'quantity' => $cartItem->quantity,
-                    // Add more item details as needed
                 ]);
             }
 
-            // Clear the user's cart
             $user->carts()->delete();
 
             return response()->json([
@@ -367,24 +392,20 @@ class CartController extends Controller
                 'order' => $order,
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage(),
-            ], 500);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => $e->getMessage(),
+                ],
+                500,
+            );
         }
     }
-        
-    
+
     public function getAddress($addressId)
     {
         return Address::find($addressId)->first();
     }
-
-
-
-
-
-
 
     // Function to get coordinates from an address using LocationIQ API
     function getCoordinatesFromAddress($formattedAddress)
@@ -397,7 +418,6 @@ class CartController extends Controller
 
         // Encode the address for use in the API request
         $encodedAddress = urlencode($formattedAddress);
-
 
         // Construct the API URL
         $apiUrl = "https://api.geoapify.com/v1/geocode/search?text={$encodedAddress}&apiKey={$apiKey}";
@@ -414,7 +434,6 @@ class CartController extends Controller
             $latitude = $data['features'][0]['geometry']['coordinates'][1];
             $longitude = $data['features'][0]['geometry']['coordinates'][0];
 
-
             return [
                 'latitude' => $latitude,
                 'longitude' => $longitude,
@@ -425,7 +444,6 @@ class CartController extends Controller
         }
     }
 
-    
     //use vincenty algorithm to calculate distance
     // Function to calculate distance using Vincenty formula
     function vincentyGreatCircleDistance($userCoordinates, $adminCoordinates)
@@ -450,11 +468,10 @@ class CartController extends Controller
         return $distance;
     }
 
-
-    // function to format user address 
+    // function to format user address
     public function formatAddress($address)
     {
-        return $address['delivery_address'] . ', ' . $address['city'] . ', ' . $address['state'] . ', ' . $address['country'] ;
+        return $address['delivery_address'] . ', ' . $address['city'] . ', ' . $address['state'] . ', ' . $address['country'];
     }
 
     //function to format admin address
@@ -462,6 +479,4 @@ class CartController extends Controller
     {
         return $adminAddress['office_address'];
     }
-
-
 }
