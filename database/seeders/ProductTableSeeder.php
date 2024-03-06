@@ -31,16 +31,20 @@ class ProductTableSeeder extends Seeder
 
         // Define the image links
         $imageLinks = [
-            "http://localhost:8000/storage/product_img/1706547905.jpg",
-            "http://localhost:8000/storage/product_img/1706547947.jpg",
-            "http://localhost:8000/storage/product_img/1706547953.jpg",
-            "http://localhost:8000/storage/product_img/1706547959.jpg",
-            "http://localhost:8000/storage/product_img/1706547967.jpg",
-            // "http://localhost:8000/storage/product_img/",
-            // "http://localhost:8000/storage/product_img/",
-            // "http://localhost:8000/storage/product_img/",
-            // "http://localhost:8000/storage/product_img/",
-            // "http://localhost:8000/storage/product_img/",
+            "http://localhost:8000/storage/product_img/440x440.png_480x480.png_.webp",
+            "http://localhost:8000/storage/product_img/computerImage .webp",
+            "http://localhost:8000/storage/product_img/freezer.webp",
+            "http://localhost:8000/storage/product_img/kitchen2.webp",
+            "http://localhost:8000/storage/product_img/kitchenset.webp",
+            "http://localhost:8000/storage/product_img/security.webp",
+            "http://localhost:8000/storage/product_img/product_img/Mini-Fridge-7-5L-Car-Home-Refrigerator-Mini-Fridges-12V-Freezer-Cooler-Heater-Food-Storage-Box.jpg_350x350xz.jpg_.webp",
+            "http://localhost:8000/storage/product_img/Se6771ae3e68b46978cbb92f7628a9d18D.jpg",
+            "http://localhost:8000/storage/product_img/S61aef97c473d459e9475a7fd3db9dba9d.jpg",
+            "http://localhost:8000/storage/product_img/S4395d532050e417f93e76b141592931bL",
+            "http://localhost:8000/storage/product_img/S4967cf175e9f485ab82c0c07e1b331bda.jpg",
+            "http://localhost:8000/storage/product_img/S9489ca8eb56c4246b5a4d92c464e6f11N.jpg",
+            "http://localhost:8000/storage/product_img/Sa54692a9361f41e99fd60cdf91efc99bX.jpg",
+            "http://localhost:8000/storage/product_img/Sad96b653909c4217be9da0e43d7e1dcfS.jpg",
         ];
 
         foreach ($categories as $category) {
