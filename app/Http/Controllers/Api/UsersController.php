@@ -30,6 +30,7 @@ class UsersController extends Controller
      */
     public function showProfile($userId)
     {
+        
         try {
             // Retrieve the authenticated user
             $user = auth()->user();
@@ -49,7 +50,7 @@ class UsersController extends Controller
                 ], 403); // 403 Forbidden status code
             }
         } catch (\Exception $e) {
-            return response()->json(['error' => $e]);
+            return response()->json(['error' => $e],200);
         }
     }
 
