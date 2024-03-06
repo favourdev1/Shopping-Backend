@@ -415,8 +415,8 @@ class ProductController extends Controller
 
             if ($totalresult > 0) {
 
-                $price_min = $this->getPrice($results1)->min('sales_price');
-                $price_max = $this->getPrice($results1)->max('sales_price');
+                $price_min = $this->getPrice($results)->min('sales_price');
+                $price_max = $this->getPrice($results)->max('sales_price');
                 $brands = $this->fetchProductBrands($results1);
                 $categories = $this->getProductCategories($results1);
             }
