@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
+use App\Models\AdminSettings;
 
 class AdminController extends Controller
 {
@@ -54,5 +55,36 @@ class AdminController extends Controller
             'status' => 'success',
             'message' => $message
         ], 200);
+    }
+
+    public function getAdminSettings(){
+        $adminSettings = AdminSettings::first();
+        return response()->json([
+            'status' => 'success',
+            'data' => ['admin_settings'=>$adminSettings]
+        ]);
+    }
+
+    public function updateAdminSettings(Request $request, AdminSettings $adminSettings){
+        $request->validate([
+            'office_address' => 'sometimes|string',
+            'shipping_cost_per_meter' => 'sometimes|string',
+            'account_number_1'=>'sometimes|string',
+            'account_number_2'=>'sometimes|string',
+            'account_name_1'=>'sometimes|string',
+            'account_name_2'=>'sometimes|string',
+            'bank_name_1'=>'sometimes|string',
+            'bank_name_2'=>'sometimes|string',
+
+        ]);
+        $firstAdminSetting = AdminSettings::first();
+        if($firstAdminSetting) {
+            $firstAdminSetting->update($request->all());
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Admin settings updated successfully'
+        ]);
     }
 }
