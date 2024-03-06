@@ -15,8 +15,13 @@ return new class extends Migration
             $table->id();
             $table->string('office_address');
             $table->decimal('shipping_cost_per_meter', 8, 2);
-            $table->string('other_variable_1')->nullable();
-            $table->string('other_variable_2')->nullable();
+            $table->string('account_number_1')->nullable();
+            $table->string('account_name_1')->nullable();
+            $table->string('account_number_2')->nullable();
+            $table->string('account_name_2')->nullable();
+            $table->string('bank_name_1')->nullable();
+            $table->string('bank_name_2')->nullable();
+            
             $table->timestamps();
         });
     }
