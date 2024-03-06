@@ -444,8 +444,7 @@ $order = $user->orders()->create([
         }
     }
 
-    //use vincenty algorithm to calculate distance
-    // Function to calculate distance using Vincenty formula
+    //use vincenty algorithm to calculate distance between two coordinates
     function vincentyGreatCircleDistance($userCoordinates, $adminCoordinates)
     {
         $lat1 = deg2rad($userCoordinates['latitude']);
