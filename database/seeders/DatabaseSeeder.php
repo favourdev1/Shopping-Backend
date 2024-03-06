@@ -22,8 +22,8 @@ class DatabaseSeeder extends Seeder
         // ]);
         $this->call([
             // CategoriesTableSeeder::class,
-            // AdminSettingsTableSeeder::class,
-            ProductTableSeeder::class,
+            AdminSettingsTableSeeder::class,
+            // ProductTableSeeder::class,
         ]);
     }
 }
