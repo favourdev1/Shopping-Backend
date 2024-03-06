@@ -66,9 +66,15 @@ Route::middleware('auth:api')->group(function () {
     // Order routes
     Route::prefix('orders')->group(function () {
         Route::get('/', [OrderController::class, 'fetchOrders']);
+        Route::get('/fetch/{order_number}',[OrderController::class, 'fetchOrderbyOrderNumber']);
     });
 
     Route::get('/generate-order-id', [PaymentController::class, 'generateOrderId']);
+
+    Route::prefix('payments')->group(function () {
+        // Route::get('/payment-methods', [PaymentController::class, 'index']);
+        Route::post('/add', [PaymentController::class, 'store']);
+    });
 
     // Wishlist routes
     Route::prefix('wishlists')->group(function () {
@@ -95,6 +101,9 @@ Route::middleware('auth:api')->group(function () {
         Route::delete('/delete/{address}', [AddressController::class, 'destroy']);
     });
 
+
+
+
     // ============================== ==========================
     // ======================== Admin routes ====================================
     // ============================== ==========================
@@ -111,6 +120,11 @@ Route::middleware('auth:api')->group(function () {
                 Route::post('/{user}/removeadmin', [AdminController::class, 'disableAdmin']);
             });
 
+
+            // Payment controller functionalities 
+            Route::prefix('payments')->group(function () {
+                Route::get('/', [PaymentController::class, 'index']);
+            });
 
             // Category Functionalities
             Route::prefix('category')->group(function () {
@@ -132,6 +146,11 @@ Route::middleware('auth:api')->group(function () {
                 Route::put('/{product}', [ProductController::class, 'update']);
                 Route::post('/upload-image', [ProductController::class, 'upload']);
                 Route::delete('/delete/{product}', [ProductController::class, 'destroy']);
+            });
+
+            Route::prefix('settings')->group(function () {
+                Route::get('/admin-settings', [AdminController::class, 'getAdminSettings']);
+                Route::put('/admin-settings', [AdminController::class, 'updateAdminSettings']);
             });
         });
 });
