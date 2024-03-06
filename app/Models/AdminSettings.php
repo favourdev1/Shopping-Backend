@@ -12,8 +12,13 @@ class AdminSettings extends Model
     protected $fillable = [
         'office_address',
         'shipping_cost_per_meter',
-        'other_variable_1',
-        'other_variable_2',
+        'account_number_1',
+        'account_number_2',
+        'account_name_1',
+        'account_name_2',
+        'bank_name_1',
+        'bank_name_2',
+       
         
     ];
 
