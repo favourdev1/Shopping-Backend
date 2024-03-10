@@ -23,15 +23,11 @@ class PaymentController extends Controller
     // function to store the payment infomation in the database
     public function store(Request $request)
     {
+      $payment_method = "bank transfer"; // default payment method 
+
         $request->validate([
             'order_id' => 'required|integer',
-            'user_id' => 'required|integer',
-            'payment_method_id' => 'required|integer',
-            'payment_status' => 'required|string',
-            'payment_amount' => 'required|numeric',
-            'image' => 'required|image',
-            'payment_date' => 'required|date',
-            'approval_status' => 'required|string'
+           'payment_proof' => 'required|image',
         ]);
 
         $image = $request->file('image');

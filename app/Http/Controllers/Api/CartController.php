@@ -319,7 +319,8 @@ class CartController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'address' => 'required|exists:addresses,id',
-            'payment_method' => 'required|in:card,cash on delivery,bank transfer',
+            'payment_method' => 'required|exists:payment_methods,id',
+            // 'payment_method' => 'required|in:card,cash on delivery,bank transfer',
             'delivery_instructions' => 'nullable|string',
         ]);
 
@@ -349,31 +350,28 @@ class CartController extends Controller
             });
 
             $totalCost += $shippingCharge;
-$orderId = $orderController->generateOrderId();
-$note = $request->delivery_instructions;
-if (empty($note)) {
-    $note = '';
-}
-            
-         
-$order = $user->orders()->create([
-    'total_amount' => $totalCost,
-    'shipping_charge' => $shippingCharge,
-    'payment_method' => $request->payment_method,
-    'notes' => $note,
-    'status' => 'pending',
-    'shipping_address' => $address->delivery_address,
-    'billing_address' => $address->delivery_address,
-    'email' => $user->email,
-    'order_number' => $orderId,
-    'user_id' => $userId,
-    'payment_status' => 'pending',
-    'delivery_status' => 'pending',
-    'order_status' => 'pending',
-    'tax' => $tax,
-]);
+            $orderId = $orderController->generateOrderId();
+            $note = $request->delivery_instructions;
+            if (empty($note)) {
+                $note = '';
+            }
 
-         
+            $order = $user->orders()->create([
+                'total_amount' => $totalCost,
+                'shipping_charge' => $shippingCharge,
+                'payment_method' => $request->payment_method,
+                'notes' => $note,
+                'status' => 'pending',
+                'shipping_address' => $address->delivery_address,
+                'billing_address' => $address->delivery_address,
+                'email' => $user->email,
+                'order_number' => $orderId,
+                'user_id' => $userId,
+                'payment_status' => 'pending',
+                'delivery_status' => 'pending',
+                'order_status' => 'pending',
+                'tax' => $tax,
+            ]);
 
             foreach ($cartItems as $cartItem) {
                 $order->orderItems()->create([

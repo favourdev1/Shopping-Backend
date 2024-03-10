@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Mail\OrderShipped;
+use App\Models\Order;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,4 +17,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+
+
+// Email ROutes 
+Route::get('/mailable', function () {
+    $order = Order::find(5); // Get an order from the database
+    return new OrderShipped($order); // Return an instance of the mailable
 });

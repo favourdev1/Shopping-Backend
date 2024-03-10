@@ -24,6 +24,8 @@ class DatabaseSeeder extends Seeder
             // CategoriesTableSeeder::class,
             AdminSettingsTableSeeder::class,
             // ProductTableSeeder::class,
+            PaymentMethodSeeder::class,
+            
         ]);
     }
 }

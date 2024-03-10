@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\EmailSubscriptionController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -74,6 +76,11 @@ Route::middleware('auth:api')->group(function () {
     Route::prefix('payments')->group(function () {
         // Route::get('/payment-methods', [PaymentController::class, 'index']);
         Route::post('/add', [PaymentController::class, 'store']);
+    });
+
+// paymentmethod route 
+    Route::prefix('paymentmethods')->group(function () {
+        Route::get('/', [PaymentController::class, 'index']);
     });
 
     // Wishlist routes
@@ -153,4 +160,19 @@ Route::middleware('auth:api')->group(function () {
                 Route::put('/admin-settings', [AdminController::class, 'updateAdminSettings']);
             });
         });
+
+
+
+
 });
+
+
+
+
+Route::prefix('email')->group(function () {
+    Route::post('/subscribe', [EmailSubscriptionController::class, 'store']);
+    Route::get('/subscribers', [EmailSubscriptionController::class, 'index']);
+});
+
+
+

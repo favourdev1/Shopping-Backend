@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\AdminSettings;
 use App\Models\Order;
+use App\Models\OrderItems;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use illuminate\Http\facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -41,7 +43,12 @@ class OrderController extends Controller
 
         $orders = [];
         if ($user) {
-            $orders = $user->orders()->join('order_items', 'orders.id', '=', 'order_items.order_id')->join('products', 'products.id', '=', 'order_items.product_id')->get();
+            $orders = $user->orders()
+            ->join('order_items', 'orders.id', '=', 'order_items.order_id')
+            ->join('products', 'products.id', '=', 'order_items.product_id')
+       
+            
+            ->get();
         } else {
             return response()->json(['message' => 'User not authenticated'], 401);
         }
@@ -81,7 +88,21 @@ class OrderController extends Controller
         }
 
 
-        $order = $user->orders()->where('order_number', $order_number)->first();
+        $order = $user->orders()->where('order_number', $order_number)
+        
+      ->first();
+
+
+      $order_id = $order->id;
+      $orderItems = $orders = $user->orders()
+      ->join('order_items', 'orders.id', '=', 'order_items.order_id')
+      ->join('products', 'products.id', '=', 'order_items.product_id')
+ ->where ('order_items.order_id', $order_id)
+      ->get();
+   
+
+
+      $paymentInfomation = Payment::where('order_id', $order_id)->first();
         $adminSettings = AdminSettings::first();
         if (!$order) {
             return response()->json(
@@ -96,7 +117,12 @@ class OrderController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Order fetched successfully',
-            'data' => ['admin_settings'=>$adminSettings,'order'=>$order]
+            'data' => [
+                'admin_settings'=>$adminSettings,
+                'order'=>$order,
+                'order_items'=>$orderItems,
+                'payment_info'=>$paymentInfomation
+                ]
         ]);
     }
 }
