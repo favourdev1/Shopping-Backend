@@ -49,7 +49,10 @@ class OrderShipped extends Mailable
 
     public function build()
     {
-        return $this->markdown('emails.orders.shipped');
+        return $this->markdown('emails.orders.shipped')
+        ->subject('Order Shipped')
+        ->cc('favourapps17@gmail.com')
+        ;
     }
     /**
      * Get the attachments for the message.

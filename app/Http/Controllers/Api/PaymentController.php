@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
 use Illuminate\Http\Request;
 use App\Models\Payment;
+use Illuminate\Support\Facades\Auth;
 
 use App\Models\PaymentMethod;
 
@@ -12,58 +14,73 @@ class PaymentController extends Controller
 {
     public function index()
     {
-        $paymentMethods = PaymentMethod::all();
+        $payment = Payment::all();
         return response()->json([
             'status' => 'success',
-            'data' => $paymentMethods
+            'data' => $payment,
         ]);
-
     }
 
     // function to store the payment infomation in the database
     public function store(Request $request)
     {
-      $payment_method = "bank transfer"; // default payment method 
+        $payment_method = 1; // default payment method
 
         $request->validate([
-            'order_id' => 'required|integer',
-           'payment_proof' => 'required|image',
+            'order_number' => 'required',
+            'payment_proof' => 'required|image',
+            'payment_amount' => 'required',
+            'account_number' => 'required',
         ]);
 
-        $image = $request->file('image');
+        $order = Order::where('order_number', $request->order_number)->first();
+        $orderid = $order->id;
+
+        $user = auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'user not authenticated',
+            ]);
+        }
+
+        $user_id = $user->id;
+        $image = $request->file('payment_proof');
         $imageName = time() . '.' . $image->extension();
-        $image->move(public_path('images'), $imageName);
+        $image->move(storage_path('images'), $imageName);
 
         $payment = Payment::create([
-            'order_id' => $request->order_id,
-            'user_id' => $request->user_id,
-            'payment_method_id' => $request->payment_method_id,
-            'payment_status' => $request->payment_status,
+            'order_id' => $orderid,
+            'account_number' => $request->account_number,
+            'user_id' => $user_id,
+          
+            'payment_status' => 'completed',
             'payment_amount' => $request->payment_amount,
             'image' => $imageName,
-            'payment_date' => $request->payment_date,
-            'approval_status' => $request->approval_status
+            'payment_date' => \Date::now(),
+            'approval_status' => 'pending',
         ]);
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $payment
-        ], 201);
+        return response()->json(
+            [
+                'status' => 'success',
+                'message'=>'payment successfully made',
+                'data' => $payment,
+            ],
+            201,
+        );
     }
 
     // function to generate orderId
     public function generateOrderId()
     {
         // function to generate unique combination of letters and numbers
-        $orderId = 'ORD' . time() . $this->generateUniqueCode(
-            5
-        );
+        $orderId = 'ORD' . time() . $this->generateUniqueCode(5);
         return response()->json([
             'status' => 'success',
-            'data' => ['order_id' => $orderId]
+            'data' => ['order_id' => $orderId],
         ]);
     }
-
 
     public function generateUniqueCode($length = 8)
     {
@@ -75,5 +92,4 @@ class PaymentController extends Controller
         }
         return $code;
     }
-
 }

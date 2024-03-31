@@ -15,7 +15,8 @@ use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\EmailSubscriptionController;
-
+use App\Http\Controllers\Api\PaymentMethodController;
+use App\Http\Controllers\Api\ReviewController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -53,6 +54,14 @@ Route::middleware(['shoppingGuest'])->group(function () {
     Route::prefix('group')->group(function () {
         Route::get('/newArrivial', [ProductController::class, 'getNewArrivalsAutomatically']);
     });
+
+    Route::prefix('reviews')->group(function () {
+        Route::get('/show/{productId}', [ReviewController::class, 'show']);
+    });
+
+    Route::prefix('paymentmethods')->group(function () {
+        Route::get('/', [PaymentMethodController::class, 'index']);
+    });
 });
 
 // ==============================================
@@ -64,11 +73,11 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/{user}', [UsersController::class, 'showProfile']);
         Route::put('/update', [UsersController::class, 'updateProfile']);
     });
-    
+
     // Order routes
     Route::prefix('orders')->group(function () {
         Route::get('/', [OrderController::class, 'fetchOrders']);
-        Route::get('/fetch/{order_number}',[OrderController::class, 'fetchOrderbyOrderNumber']);
+        Route::get('/fetch/{order_number}', [OrderController::class, 'fetchOrderbyOrderNumber']);
     });
 
     Route::get('/generate-order-id', [PaymentController::class, 'generateOrderId']);
@@ -78,17 +87,13 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/add', [PaymentController::class, 'store']);
     });
 
-// paymentmethod route 
-    Route::prefix('paymentmethods')->group(function () {
-        Route::get('/', [PaymentController::class, 'index']);
-    });
+    // paymentmethod route
 
     // Wishlist routes
     Route::prefix('wishlists')->group(function () {
         Route::get('/', [WishlistController::class, 'index']);
         Route::post('/add/', [WishlistController::class, 'addOrDelete']);
     });
-
 
     // Cart routes
     Route::prefix('carts')->group(function () {
@@ -108,9 +113,6 @@ Route::middleware('auth:api')->group(function () {
         Route::delete('/delete/{address}', [AddressController::class, 'destroy']);
     });
 
-
-
-
     // ============================== ==========================
     // ======================== Admin routes ====================================
     // ============================== ==========================
@@ -127,8 +129,7 @@ Route::middleware('auth:api')->group(function () {
                 Route::post('/{user}/removeadmin', [AdminController::class, 'disableAdmin']);
             });
 
-
-            // Payment controller functionalities 
+            // Payment controller functionalities
             Route::prefix('payments')->group(function () {
                 Route::get('/', [PaymentController::class, 'index']);
             });
@@ -155,17 +156,43 @@ Route::middleware('auth:api')->group(function () {
                 Route::delete('/delete/{product}', [ProductController::class, 'destroy']);
             });
 
+            // ==========================================
+            // ========= AdminSettings ================
+            // ==========================================
             Route::prefix('settings')->group(function () {
                 Route::get('/admin-settings', [AdminController::class, 'getAdminSettings']);
                 Route::put('/admin-settings', [AdminController::class, 'updateAdminSettings']);
             });
+
+            // ================================================
+            // ========= Orders ===============================
+            // ================================================
+            Route::prefix('orders')->group(function () {
+                Route::get('/', [OrderController::class, 'fetchOrders']);
+                Route::get('/fetch/{order_number}', [OrderController::class, 'adminfetchOrderbyOrderNumber']);
+            });
+
+            // ================================================
+            // ========= Dashboard Info Subscription ===================
+            // ================================================
+            Route::prefix('dashboard')->group(function () {
+                Route::get('/dashboard_info', [AdminController::class, 'dashboardInfo']);
+            });
+
+            Route::prefix('reviews')->group(function () {
+                Route::get('/', [AdminController::class, 'showReviews']);
+            });
+
+            // =============================================================
+            //=============== Payment Route ==============================
+            //==============================================================
+            Route::prefix('/payment')->group(function (){
+                Route::get('/',[AdminController::class,'getAllPayments']);
+                //update payment status
+                Route::get('/update', [AdminController::class,'updatePaymentStatus']);
+            });
         });
-
-
-
-
 });
-
 
 
 
@@ -173,6 +200,3 @@ Route::prefix('email')->group(function () {
     Route::post('/subscribe', [EmailSubscriptionController::class, 'store']);
     Route::get('/subscribers', [EmailSubscriptionController::class, 'index']);
 });
-
-
-

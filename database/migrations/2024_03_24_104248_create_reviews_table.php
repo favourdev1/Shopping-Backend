@@ -10,16 +10,16 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('payment_methods', function (Blueprint $table) {
+        Schema::create('reviews', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique(); 
-            $table->string('status')->default('active');// e.g., 'transfer', 'card', 'pay on delivery'
+            $table->string('order_number');
+            $table->string('heading');
+            $table->string('description');
+            $table->unsignedBigInteger('stars');
+            $table->unsignedBigInteger('product_id');
+            $table->unsignedBigInteger('user_id');
             $table->timestamps();
-            
         });
-
-
-
     }
 
     /**
@@ -27,6 +27,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('payment_methods');
+        Schema::dropIfExists('reviews');
     }
 };

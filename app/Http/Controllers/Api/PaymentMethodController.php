@@ -14,7 +14,7 @@ class PaymentMethodController extends Controller
         $paymentMethods = PaymentMethod::all();
         return response()->json([
             'status' => 'success',
-            'data' => $paymentMethods
+            'data' =>['paymentMethods'=>$paymentMethods]
         ]);
 
 
@@ -75,5 +75,5 @@ class PaymentMethodController extends Controller
             ], 404);
         }
     }
-    
+
 }

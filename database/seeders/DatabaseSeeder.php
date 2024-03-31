@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 
@@ -22,10 +22,10 @@ class DatabaseSeeder extends Seeder
         // ]);
         $this->call([
             // CategoriesTableSeeder::class,
-            AdminSettingsTableSeeder::class,
+            // AdminSettingsTableSeeder::class,
             // ProductTableSeeder::class,
             PaymentMethodSeeder::class,
-            
+
         ]);
     }
 }
