@@ -274,7 +274,7 @@ class CartController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Shipping cost calculated successfully',
-            'data' => ['shipping_cost' => $shippingCost],
+            'data' => ['shipping_cost' => round($shippingCost,2)],
         ]);
     }
 
@@ -290,7 +290,7 @@ class CartController extends Controller
 
         $totalItems = $cartItems->sum('quantity');
 
-        if ($totalItems > 3) {
+        if ($totalItems > 10) {
             $estimatedCostOnItems = $totalItems * $costOnItems;
         }
 

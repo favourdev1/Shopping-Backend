@@ -88,7 +88,7 @@
 
         <p>Thank you for your business!</p>
 
-        <p class="footer">Sincerely,<br>The Boring Company Team</p>
+        <p class="footer">Sincerely,<br>Sosmart Shopping</p>
     </div>
 </body>
 </html>

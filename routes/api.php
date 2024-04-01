@@ -40,6 +40,7 @@ Route::middleware('auth:api')->group(function () {
 Route::middleware(['shoppingGuest'])->group(function () {
     Route::prefix('products')->group(function () {
         Route::get('/discountproduct', [ProductController::class, 'getDiscountProduct']);
+        Route::get('/top_deals',[ProductController::class, 'getTopDeals']);
         Route::get('/', [ProductController::class, 'index']);
         Route::get('/search', [ProductController::class, 'search']);
         Route::get('/{productId}', [ProductController::class, 'show']);

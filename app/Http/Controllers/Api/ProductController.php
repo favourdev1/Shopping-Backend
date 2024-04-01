@@ -328,6 +328,7 @@ class ProductController extends Controller
 
 
             if (!$request->has('group') || empty($request->group)) {
+               
                 if (empty(trim($request->input('query')))) {
                     $results = Product::inRandomOrder()
                         ->join('categories', 'products.category_id', '=', 'categories.id')
@@ -364,6 +365,11 @@ class ProductController extends Controller
                 if ($request->group == 'new_arrivals') {
                     $results = $this->getNewArrivalsAutomatically();
                     $results1 = $this->getNewArrivalsAutomatically();
+                }else{
+                    if($request->group == 'top_deals'){
+                        $results = $this->getTopDeals();
+                        $results1 = $this->getTopDeals();
+                    }
                 }
             }
 
@@ -505,4 +511,47 @@ class ProductController extends Controller
 
         return $newArrivals;
     }
+
+
+    public function getTopDeals()
+    {
+      
+        $products = Product::join('categories', 'products.category_id', '=', 'categories.id')
+        ->where('regular_price', '!=', '0')
+        ->orWhere('regular_price', '!=', '')
+        ->select('products.*', 'categories.category_name as category')
+        ->get()
+        ->map(function ($product) {
+
+            $product->discount_percentage = $this->calculatePercentageDiscount($product->regular_price, $product->sales_price);
+            return $product;
+        })
+        ->filter(function ($product) {
+            return $product->discount_percentage > 50;
+        })
+        ->values();
+        
+
+        return $products;
+        
+    }
+
+
+
+    private function calculatePercentageDiscount($originalPrice, $salesPrice){
+        if(!is_numeric($originalPrice) || !is_numeric($salesPrice)){
+            $originalPrice = floatval($originalPrice);
+            $salesPrice = floatval($salesPrice);
+        }
+    
+        // Check if the sales price is greater than or equal to the original price
+        if($salesPrice >=  $originalPrice ){
+            return 0; // Return 0 discount if the sales price is not less than the original price
+        }
+    
+        $discount =  $originalPrice - $salesPrice;
+        $percentageDiscount = ($discount/$originalPrice)*100;
+        return $percentageDiscount;
+    }
+    
 }

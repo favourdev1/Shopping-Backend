@@ -32,12 +32,35 @@ class ReviewController extends Controller
         }
 
 
-        $review = Review::where('product_id', $productId)->get();
+        $review = Review::where('product_id', $productId)
+        ->join('users','reviews.user_id','users.id')
+        ->select('reviews.*','users.firstname','users.lastname')->get();
+
+        $global_rating = Review::where('product_id', $productId)->avg('stars');
+        $total_ratings = Review::where('product_id', $productId)->count();
+        $five_star = Review::where('product_id', $productId)->where('stars', 5)->count();
+        $four_star = Review::where('product_id', $productId)->where('stars', 4)->count();
+        $three_star = Review::where('product_id', $productId)->where('stars', 3)->count();
+        $two_star = Review::where('product_id', $productId)->where('stars', 2)->count();
+        $one_star = Review::where('product_id', $productId)->where('stars', 1)->count();
+        $total_stars_count = $five_star + $four_star + $three_star + $two_star + $one_star;
+
+        $avg_rating = Review::where('product_id', $productId)->avg('stars');
         return response()->json([
             'status' => 'success',
             'message' => 'review fetched successfully',
+
             'data' => [
                 'review' => $review,
+                'global_rating' => round($global_rating,2),
+                'total_ratings' => $total_ratings,
+                'five_star' => $five_star,
+                'four_star' => $four_star,
+                'three_star' => $three_star,
+                'two_star' => $two_star,
+                'one_star' => $one_star,
+                'total_stars_count' => $total_stars_count,  
+                'avg_rating' => round($avg_rating,2),
             ],
         ]);
     }
