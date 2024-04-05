@@ -13,7 +13,6 @@ use Illuminate\Database\QueryException;
 use App\Models\Category;
 use Illuminate\Support\Facades\DB;
 
-
 class ProductController extends Controller
 {
     public function index()
@@ -21,48 +20,43 @@ class ProductController extends Controller
         // Retrieve all products
         $products = Product::join('categories', 'products.category_id', '=', 'categories.id')
             ->select('products.*', 'categories.category_name as category')
-            // ->paginate(10); 
-            ->get()->take(10);
+            // ->paginate(10);
+            ->get()
+            ->take(10);
         return response()->json([
             'status' => 'success',
             'data' => ['products' => $products],
         ]);
     }
 
-
-
     public function getDiscountProduct()
     {
         try {
-            $products = Product::join('categories', 'products.category_id', '=', 'categories.id')
-                ->where('regular_price', '!=', '0')
-                ->orWhere('regular_price', '!=', '')
-                ->select('products.*', 'categories.category_name as category')
-                ->get()->take(10);
+            $products = Product::join('categories', 'products.category_id', '=', 'categories.id')->where('regular_price', '!=', '0')->orWhere('regular_price', '!=', '')->select('products.*', 'categories.category_name as category')->get()->take(10);
 
-            return response()->json([
-                'status' => 'success',
-                'data' => ['products' => $products]
-            ], 200);
+            return response()->json(
+                [
+                    'status' => 'success',
+                    'data' => ['products' => $products],
+                ],
+                200,
+            );
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error1',
-                'mesasage' => 'Unable to fetch resource. ' . $e->getMessage()
-
-            ], 422);
+            return response()->json(
+                [
+                    'status' => 'error1',
+                    'mesasage' => 'Unable to fetch resource. ' . $e->getMessage(),
+                ],
+                422,
+            );
         }
-
     }
     public function show($productId)
     {
         try {
             // Find the product by ID
             // Find the product by ID
-            $product = DB::table('products')
-                ->join('categories', 'products.category_id', '=', 'categories.id')
-                ->select('products.*', 'categories.category_name as category')
-                ->where('products.id', $productId)
-                ->first();
+            $product = DB::table('products')->join('categories', 'products.category_id', '=', 'categories.id')->select('products.*', 'categories.category_name as category')->where('products.id', $productId)->first();
 
             if (!$product) {
                 return response()->json([
@@ -75,22 +69,25 @@ class ProductController extends Controller
                 'status' => 'success',
                 'data' => $product,
             ]);
-
         } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Product not found',
-            ], 404);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'Product not found',
+                ],
+                404,
+            );
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Validation failed',
-                'errors' => $e->errors(),
-            ], 422);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors(),
+                ],
+                422,
+            );
         }
     }
-
-
 
     public function store(Request $request)
     {
@@ -120,35 +117,37 @@ class ProductController extends Controller
                 'cash_on_delivery' => 'in:true,false',
                 'free_shipping' => 'in:true,false',
                 'shipping_cost' => 'numeric|min:0',
-                'tax' => 'min:0'
+                'tax' => 'min:0',
             ]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => implode(", ", $validator->errors()->all())
-                ], 422);
-
+                return response()->json(
+                    [
+                        'status' => 'error',
+                        'message' => implode(', ', $validator->errors()->all()),
+                    ],
+                    422,
+                );
             }
 
             // Create a new product
             Product::create($request->all());
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Product added successfully'
-            ], 200);
-        } catch (QueryException $e) {
             return response()->json(
                 [
-                    'status' => 'error',
-                    'message',
-                    'Error creating product: ' . $e->getMessage()
-                ]
+                    'status' => 'success',
+                    'message' => 'Product added successfully',
+                ],
+                200,
             );
+        } catch (QueryException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message',
+                'Error creating product: ' . $e->getMessage(),
+            ]);
         }
     }
-
 
     public function update(Request $request, $id)
     {
@@ -178,41 +177,51 @@ class ProductController extends Controller
                 'cash_on_delivery' => 'in:true,false',
                 'free_shipping' => 'in:true,false',
                 'shipping_cost' => 'numeric|min:0',
-                'tax' => 'min:0'
+                'tax' => 'min:0',
             ]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => implode($validator->errors()->all()),
-                    'errors' => implode($validator->errors()->all()),
-                ], 422);
-
+                return response()->json(
+                    [
+                        'status' => 'error',
+                        'message' => implode($validator->errors()->all()),
+                        'errors' => implode($validator->errors()->all()),
+                    ],
+                    422,
+                );
             }
 
             // Update the product
             $product = Product::findOrFail($id);
             $product->update($request->all());
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Product updated successfully'
-            ], 200);
+            return response()->json(
+                [
+                    'status' => 'success',
+                    'message' => 'Product updated successfully',
+                ],
+                200,
+            );
         } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'product does not exist ',
-                'errors' => $e->getMessage(),
-            ], 404);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'product does not exist ',
+                    'errors' => $e->getMessage(),
+                ],
+                404,
+            );
         } catch (QueryException $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Error updating product ',
-                'errors' => $e->getMessage(),
-            ], 404);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'Error updating product ',
+                    'errors' => $e->getMessage(),
+                ],
+                404,
+            );
         }
     }
-
 
     public function destroy($productId)
     {
@@ -227,17 +236,18 @@ class ProductController extends Controller
                 'status' => 'success',
                 'message' => 'Product deleted successfully',
             ]);
-
         } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Product not found',
-            ], 404);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'Product not found',
+                ],
+                404,
+            );
         }
     }
 
-
-    // for uploading image 
+    // for uploading image
     public function upload(Request $request)
     {
         try {
@@ -250,49 +260,52 @@ class ProductController extends Controller
                 $imageName = time() . '.' . $image->extension();
                 $image->move(public_path('storage/product_img'), $imageName);
 
-                return response()->json([
-                    'data' => ['image_url' => url('storage/product_img/' . $imageName)],
-                    'message' => 'Image uploaded successfully',
-                    'status' => 'success'
-                ], 200);
+                return response()->json(
+                    [
+                        'data' => ['image_url' => url('storage/product_img/' . $imageName)],
+                        'message' => 'Image uploaded successfully',
+                        'status' => 'success',
+                    ],
+                    200,
+                );
             } else {
-                return response()->json([
-                    'data' => null,
-                    'message' => 'Invalid image file',
-                    'status' => 'error'
-                ], 400);
+                return response()->json(
+                    [
+                        'data' => null,
+                        'message' => 'Invalid image file',
+                        'status' => 'error',
+                    ],
+                    400,
+                );
             }
         } catch (\Exception $e) {
-            return response()->json([
-                'data' => null,
-                'message' => 'Error uploading image: ' . $e->getMessage(),
-                'status' => 'error'
-            ], 500);
+            return response()->json(
+                [
+                    'data' => null,
+                    'message' => 'Error uploading image: ' . $e->getMessage(),
+                    'status' => 'error',
+                ],
+                500,
+            );
         }
     }
 
-
     // TODO fix bug with serarch method
-
 
     private function fetchCategories($categoryName)
     {
         $categories = Category::where('category_name', 'like', '%' . $categoryName . '%');
         if (!$categories->count()) {
-
             return false;
         }
 
         return $categories->get(['id', 'category_name']);
     }
 
-
-
     // Search with filters
     public function search(Request $request)
     {
         $categoryId = null;
-
 
         $price_max = 0;
         $price_min = 0;
@@ -326,23 +339,16 @@ class ProductController extends Controller
         try {
             $validator->validate();
 
-
             if (!$request->has('group') || empty($request->group)) {
-               
                 if (empty(trim($request->input('query')))) {
-                    $results = Product::inRandomOrder()
-                        ->join('categories', 'products.category_id', '=', 'categories.id')
-                        ->select('products.*', 'categories.category_name as category');
-                    $results1 = Product::inRandomOrder()
-                        ->join('categories', 'products.category_id', '=', 'categories.id')
-                        ->select('products.*', 'categories.category_name as category');
-
+                    $results = Product::inRandomOrder()->join('categories', 'products.category_id', '=', 'categories.id')->select('products.*', 'categories.category_name as category');
+                    $results1 = Product::inRandomOrder()->join('categories', 'products.category_id', '=', 'categories.id')->select('products.*', 'categories.category_name as category');
                 } else {
-
                     $query = $request->input('query');
 
                     $results = Product::where(function ($queryBuilder) use ($query) {
-                        $queryBuilder->where('products.product_name', 'like', "%$query%")
+                        $queryBuilder
+                            ->where('products.product_name', 'like', "%$query%")
                             ->orWhere('products.tags', 'like', "%$query%")
                             ->orWhere('products.brand', 'like', "%$query%")
                             ->orWhere('products.description', 'like', "%$query%");
@@ -351,52 +357,45 @@ class ProductController extends Controller
                         ->select('products.*', 'categories.category_name as category');
 
                     $results1 = Product::where(function ($queryBuilder) use ($query) {
-                        $queryBuilder->where('products.product_name', 'like', "%$query%")
+                        $queryBuilder
+                            ->where('products.product_name', 'like', "%$query%")
                             ->orWhere('products.tags', 'like', "%$query%")
                             ->orWhere('products.brand', 'like', "%$query%")
                             ->orWhere('products.description', 'like', "%$query%");
                     })
                         ->join('categories', 'products.category_id', '=', 'categories.id')
                         ->select('products.*', 'categories.category_name as category');
-
-
                 }
             } else {
                 if ($request->group == 'new_arrivals') {
                     $results = $this->getNewArrivalsAutomatically();
                     $results1 = $this->getNewArrivalsAutomatically();
-                }else{
-                    if($request->group == 'top_deals'){
+                } else {
+                    if ($request->group == 'top-deals') {
                         $results = $this->getTopDeals();
+                        // return $results;
                         $results1 = $this->getTopDeals();
                     }
                 }
             }
 
-
-
             if ($request->has('category')) {
                 $categories = $this->fetchCategories($request->input('category'));
                 if ($categories) {
-
                     $categoryId = $categories->first()['id'];
                     $results->where('category_id', $categoryId);
                 }
             }
-
-
 
             if ($request->has('brands')) {
                 $brandsearch = explode(',', $request->query('brands'));
 
                 $results->where(function ($query) use ($brandsearch) {
                     foreach ($brandsearch as $brand) {
-
                         $query->orWhere('products.brand', 'like', "%$brand%");
                     }
                 });
             }
-
 
             if ($request->has('free_shipping')) {
                 $freeShipping = $request->input('free_shipping');
@@ -415,16 +414,45 @@ class ProductController extends Controller
             }
             // }
 
-            $resultVal = $results->get();
-            $totalresult = count($results->get());
+            if ($request->has('group') && $request->group == 'top-deals') {
+                $resultVal = $results;
+                $totalresult = count($results);
+            } else {
+                $resultVal = $results->get();
+                $totalresult = count($results->get());
+            }
 
+            if ($request->has('group') && $request->group == 'top-deals') {
+                if ($totalresult > 0) {
+                    $price_min = $resultVal->min('sales_price');
+                    $price_max = $resultVal->max('sales_price');
+                    // Extract unique brands from the filtered products
+                    $brands = $resultVal
+                        ->pluck('brand')
+                        ->unique()
+                        ->map(function ($brand) {
+                            return ['brand' => $brand];
+                        })
+                        ->values();
+                    $categories = $resultVal
+                        ->pluck('category_id', 'category')
+                        ->unique()
+                        ->map(function ($categoryId, $categoryName) {
+                            return [
+                                'category_id' => $categoryId,
+                                'category_name' => $categoryName,
+                            ];
+                        })
+                        ->values();
+                }
+            } else {
+                if ($totalresult > 0) {
+                    $price_min = $this->getPrice($results)->min('sales_price');
+                    $price_max = $this->getPrice($results)->max('sales_price');
 
-            if ($totalresult > 0) {
-
-                $price_min = $this->getPrice($results)->min('sales_price');
-                $price_max = $this->getPrice($results)->max('sales_price');
-                $brands = $this->fetchProductBrands($results1);
-                $categories = $this->getProductCategories($results1);
+                    $brands = $this->fetchProductBrands($results1);
+                    $categories = $this->getProductCategories($results1);
+                }
             }
             return response()->json([
                 'status' => 'success',
@@ -434,26 +462,25 @@ class ProductController extends Controller
                     'brands' => $brands,
                     'price_min' => round($price_min),
                     'price_max' => round($price_max),
-                    "products_found" => $totalresult,
-                    "categories" => $categories
+                    'products_found' => $totalresult,
+                    'categories' => $categories,
                 ],
-
             ]);
-
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Validation failed',
-                'errors' => $e->errors(),
-            ], 422);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors(),
+                ],
+                422,
+            );
         }
     }
 
     private function fetchProductBrands($result)
     {
         return $result->select('brand')->distinct()->get();
-
-
     }
 
     private function getPrice($products)
@@ -472,19 +499,20 @@ class ProductController extends Controller
         $product = Product::find($productId);
 
         if (!$product) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Product Does not exist ',
-
-            ], 422);
+            return response()->json(
+                [
+                    'status' => 'error',
+                    'message' => 'Product Does not exist ',
+                ],
+                422,
+            );
         }
 
         // Find similar products based on name, category, and tags
         $similarProducts = Product::where('category_id', $product->category_id)
             ->orWhere(function ($query) use ($product) {
                 // Search for products with similar names or tags
-                $query->where('product_name', 'like', '%' . $product->product_name . '%')
-                    ->orWhere('tags', 'like', '%' . $product->tags . '%');
+                $query->where('product_name', 'like', '%' . $product->product_name . '%')->orWhere('tags', 'like', '%' . $product->tags . '%');
             })
             ->where('id', '!=', $productId) // Exclude the current product
             ->take(10) // Adjust the number of similar products you want to display
@@ -496,62 +524,51 @@ class ProductController extends Controller
         ]);
     }
 
-
-
-
-
-
     public function getNewArrivalsAutomatically()
     {
-        $newArrivals = Product::join('categories', 'products.category_id', '=', 'categories.id')
-        ->select('products.*', 'categories.category_name as category')
-        ->orderBy('products.created_at', 'desc')
-        ->take(10);
-
+        $newArrivals = Product::join('categories', 'products.category_id', '=', 'categories.id')->select('products.*', 'categories.category_name as category')->orderBy('products.created_at', 'desc')->take(10);
 
         return $newArrivals;
     }
 
+    private function filterProducts($query)
+    {
+        return $query
+            ->join('categories', 'products.category_id', '=', 'categories.id')
+            ->where('regular_price', '!=', '0')
+            ->orWhere('regular_price', '!=', '')
+            ->selectRaw(
+                'products.*, categories.category_name as category,
+            IF(sales_price >= regular_price, 0, ((regular_price - sales_price) / regular_price) * 100) as discount_percentage',
+            )
+            ->get()
+            ->filter(function ($product) {
+                return $product->discount_percentage > 50;
+            })
+            ->values();
+    }
 
     public function getTopDeals()
     {
-      
-        $products = Product::join('categories', 'products.category_id', '=', 'categories.id')
-        ->where('regular_price', '!=', '0')
-        ->orWhere('regular_price', '!=', '')
-        ->select('products.*', 'categories.category_name as category')
-        ->get()
-        ->map(function ($product) {
-
-            $product->discount_percentage = $this->calculatePercentageDiscount($product->regular_price, $product->sales_price);
-            return $product;
-        })
-        ->filter(function ($product) {
-            return $product->discount_percentage > 50;
-        })
-        ->values();
-        
+        $products = $this->filterProducts(Product::query());
 
         return $products;
-        
     }
 
-
-
-    private function calculatePercentageDiscount($originalPrice, $salesPrice){
-        if(!is_numeric($originalPrice) || !is_numeric($salesPrice)){
+    private function calculatePercentageDiscount($originalPrice, $salesPrice)
+    {
+        if (!is_numeric($originalPrice) || !is_numeric($salesPrice)) {
             $originalPrice = floatval($originalPrice);
             $salesPrice = floatval($salesPrice);
         }
-    
+
         // Check if the sales price is greater than or equal to the original price
-        if($salesPrice >=  $originalPrice ){
+        if ($salesPrice >= $originalPrice) {
             return 0; // Return 0 discount if the sales price is not less than the original price
         }
-    
-        $discount =  $originalPrice - $salesPrice;
-        $percentageDiscount = ($discount/$originalPrice)*100;
+
+        $discount = $originalPrice - $salesPrice;
+        $percentageDiscount = ($discount / $originalPrice) * 100;
         return $percentageDiscount;
     }
-    
 }

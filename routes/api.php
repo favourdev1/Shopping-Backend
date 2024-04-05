@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\EmailSubscriptionController;
 use App\Http\Controllers\Api\PaymentMethodController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\AdminSettingsController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -128,6 +129,12 @@ Route::middleware('auth:api')->group(function () {
             Route::prefix('users')->group(function () {
                 Route::post('/{user}/makeadmin', [AdminController::class, 'setAsAdmin']);
                 Route::post('/{user}/removeadmin', [AdminController::class, 'disableAdmin']);
+            });
+
+            Route::prefix('admin_settings')->group(function () {
+                Route::get('/', [AdminSettingsController::class, 'index']);
+                Route::post('/office/address', [AdminSettingsController::class, 'addOrUpdateOfficeAddress']);
+                Route::post('/shipping/cost', [AdminSettingsController::class, 'addOrUpdateShippingCost']);
             });
 
             // Payment controller functionalities
