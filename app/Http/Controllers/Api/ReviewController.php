@@ -80,7 +80,7 @@ class ReviewController extends Controller
             
         }
         $request->validate([
-            'product_id' => 'requiredexists:product_id',
+            'product_id' => 'required | exists:product_id',
             'order_number' => 'required|exists:orders,order_number',
             'heading' => 'required',
             'stars' => 'is_numeric|min:1,max:5',

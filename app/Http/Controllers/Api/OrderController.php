@@ -36,42 +36,42 @@ class OrderController extends Controller
         return $code;
     }
 
-    // fetch all the orders for a particular user
-    public function fetchOrders()
+    public function adminFetchOrders()
     {
         $user = auth()->user();
         $orders = [];
         if ($user) {
             if ($user->is_admin == true) {
-                $orders = Order::join('users', 'orders.user_id', '=', 'users.id')
-                            ->select('orders.*', 'users.firstname', 'users.lastname', 'orders.id as id', 'orders.status as order_status')->orderBy('created_at','desc')
-                            ->paginate(10);
+                $orders = Order::join('users', 'orders.user_id', '=', 'users.id')->select('orders.*', 'users.firstname', 'users.lastname', 'orders.id as id', 'orders.status as order_status')->orderBy('created_at', 'desc')->paginate(10);
             } else {
-                $orders = $user->orders()->join('order_items', 'orders.id', '=', 'order_items.order_id')->join('products', 'products.id', '=', 'order_items.product_id')->join('users', 'orders.user_id', '=', 'users.id')->select('orders.*', 'products.product_img1', 'users.firstname', 'users.lastname', 'orders.id as id', 'order_items.order_id as order_items_id', 'orders.status as order_status')->paginate();
+                return response()->json(['message' => 'User not authenticated'], 401);
             }
         } else {
             return response()->json(['message' => 'User not authenticated'], 401);
         }
 
-        // if ($user) {
-        //     $orders = $user
-        //         ->orders()
-        //         ->join('order_items', 'orders.id', '=', 'order_items.order_id')
-        //         ->join('products', 'products.id', '=', 'order_items.product_id')
-        //         ->join('users', 'orders.user_id', '=', 'users.id')
-        //         ->select(
-        //             'orders.*',
-        //             'products.product_img1',
-        //             'users.firstname',
-        //             'users.lastname',
-        //             'orders.id as id',
-        //             'order_items.order_id as order_items_id',
-        //             'orders.status as order_status',
-        //         )
-        //         ->paginate();
-        // } else {
-        //     return response()->json(['message' => 'User not authenticated'], 401);
-        // }
+        return response()->json(
+            [
+                'data' => $orders,
+                'message' => 'Orders fetched successfully.',
+                'status' => 'success',
+            ],
+            200,
+        );
+    }
+
+    // fetch all the orders for a particular user
+    public function fetchOrders()
+    {
+        $user = auth()->user();
+        $orders = [];
+        if (!$user) {
+            return response()->json(['message' => 'User not authenticated'], 401);
+        }
+
+       
+        $orders = $user->orders()->join('order_items', 'orders.id', '=', 'order_items.order_id')->join('products', 'products.id', '=', 'order_items.product_id')->join('users', 'orders.user_id', '=', 'users.id')->select('orders.*','products.*', 'products.id as product_id', 'order_items.quantity as quantity',  'users.firstname', 'users.lastname', 'orders.id as id', 'order_items.order_id as order_items_id', 'orders.status as order_status')->get();
+
         return response()->json(
             [
                 'data' => $orders,
@@ -140,9 +140,6 @@ class OrderController extends Controller
         ]);
     }
 
-
-
-
     public function adminFetchOrderbyOrderNumber($order_number)
     {
         $user = auth()->user();
@@ -168,16 +165,12 @@ class OrderController extends Controller
             );
         }
 
-        $order = $user
-            ->orders()
-            ->where('order_number', $order_number)
-            ->orderBy('created_at','desc')
-            ->first();
+        $order = $user->orders()->where('order_number', $order_number)->orderBy('created_at', 'desc')->first();
 
         $order_id = $order->id;
-        $user_id  = $order->user_id;
+        $user_id = $order->user_id;
 
-        $user_info = User::where('id',$user_id)->first();
+        $user_info = User::where('id', $user_id)->first();
 
         $orderItems = OrderItems::join('products', 'products.id', '=', 'order_items.product_id')->where('order_items.order_id', $order_id)->get();
 
@@ -199,15 +192,15 @@ class OrderController extends Controller
             'data' => [
                 'admin_settings' => $adminSettings,
                 'order' => $order,
-                'user_info'=>$user_info,
+                'user_info' => $user_info,
                 'order_items' => $orderItems,
                 'payment_info' => $paymentInfomation,
             ],
         ]);
     }
 
-
-    public function updateOrderStatus(Request $request){
+    public function updateOrderStatus(Request $request)
+    {
         //write me a list of order status
         // pending, processing, shipped, delivered, cancelled
         $orderStatus = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
@@ -217,12 +210,9 @@ class OrderController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'order_id' => 'required',
-            'status' => 'required,in:pending,processing,shipped,delivered,cancelled',
+            'order_number' => 'required',
+            'status' => 'required | in:pending,processing,shipped,delivered,cancelled',
         ]);
-        
-
-
 
         if ($validator->fails()) {
             return response()->json(
@@ -235,13 +225,12 @@ class OrderController extends Controller
             );
         }
 
-
         //check the previous statuss  that is on the database
         //if the status is the same as the new status, return an error message
         //if the status is different, update the status
         //return a success message
 
-        $order = Order::where('id', $request->order_id)->first();
+        $order = Order::where('order_number', $request->order_number)->first();
         if (!$order) {
             return response()->json(
                 [
@@ -262,19 +251,17 @@ class OrderController extends Controller
             );
         }
 
-        if($order->status =='cancelled'){
+        if ($order->status == 'cancelled') {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Order has been already cancelled, you cannot update the status',
             ]);
-        
         }
-        if($order->status =='delivered'){
+        if ($order->status == 'delivered') {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Order has been already delivered, you cannot update the status',
             ]);
-        
         }
         $order->update(['status' => $request->status]);
 
@@ -282,6 +269,5 @@ class OrderController extends Controller
             'status' => 'success',
             'message' => 'Order status updated successfully',
         ]);
-
     }
 }

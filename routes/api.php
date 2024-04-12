@@ -127,8 +127,8 @@ Route::middleware('auth:api')->group(function () {
 
             // admin-users functionalities
             Route::prefix('users')->group(function () {
-                Route::post('/{user}/makeadmin', [AdminController::class, 'setAsAdmin']);
-                Route::post('/{user}/removeadmin', [AdminController::class, 'disableAdmin']);
+                Route::post('/makeadmin', [AdminController::class, 'setAsAdmin']);
+                Route::post('/removeadmin', [AdminController::class, 'disableAdmin']);
             });
 
             Route::prefix('admin_settings')->group(function () {
@@ -176,8 +176,9 @@ Route::middleware('auth:api')->group(function () {
             // ========= Orders ===============================
             // ================================================
             Route::prefix('orders')->group(function () {
-                Route::get('/', [OrderController::class, 'fetchOrders']);
+                Route::get('/', [OrderController::class, 'adminFetchOrders']);
                 Route::get('/fetch/{order_number}', [OrderController::class, 'adminfetchOrderbyOrderNumber']);
+                Route::post('/updateOrderStatus', [OrderController::class,'updateOrderStatus']);
             });
 
             // ================================================

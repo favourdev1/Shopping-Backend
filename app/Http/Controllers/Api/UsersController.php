@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
 class UsersController extends Controller
 {
     /**
@@ -15,9 +16,17 @@ class UsersController extends Controller
     public function GetAllUsers()
     {
         $user = auth()->user();
+        if($user->is_admin == false){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Operation not allowed!',
+            ]);
+        }
+
+        $allUsers = User::all();
         return response()->json([
             'status'=>'success',
-            'data' => ['users'=>$user],
+            'data' => ['users'=>$allUsers],
             
         ]);
     }

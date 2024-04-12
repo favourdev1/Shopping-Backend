@@ -21,6 +21,8 @@ class PaymentController extends Controller
         ]);
     }
 
+
+
     // function to store the payment infomation in the database
     public function store(Request $request)
     {
@@ -47,24 +49,36 @@ class PaymentController extends Controller
         $user_id = $user->id;
         $image = $request->file('payment_proof');
         $imageName = time() . '.' . $image->extension();
-        $image->move(storage_path('images'), $imageName);
+        $image->move(public_path('images'), $imageName);
 
         $payment = Payment::create([
             'order_id' => $orderid,
             'account_number' => $request->account_number,
             'user_id' => $user_id,
-          
+
             'payment_status' => 'completed',
             'payment_amount' => $request->payment_amount,
             'image' => $imageName,
             'payment_date' => \Date::now(),
             'approval_status' => 'pending',
         ]);
+        $order = Order::where('order_number', $request->order_number)->first();
+
+        if ($order && $order->payment) {
+            $order->payment->status = 'completed';
+            $order->payment->save();
+        } else {
+            // Handle the case where the order or payment was not found
+            return response()->json([
+                'status' => 'error',
+                'message' => '.An internal error occured!.Order not found',
+            ]);
+        }
 
         return response()->json(
             [
                 'status' => 'success',
-                'message'=>'payment successfully made',
+                'message' => 'payment successfully made',
                 'data' => $payment,
             ],
             201,

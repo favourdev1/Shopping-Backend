@@ -58,5 +58,5 @@ class AdminSettingsController extends Controller
     }
 
     
-    
+
 }

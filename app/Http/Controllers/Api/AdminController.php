@@ -26,11 +26,40 @@ class AdminController extends Controller
      * @param  \App\Models\User  $user
      * @return \Illuminate\Http\JsonResponse
      */
-    public function setAsAdmin(User $user): JsonResponse
+    public function setAsAdmin(Request $request): JsonResponse
     {
-        $user->update(['is_admin' => true]);
+        $user = auth()->user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not authenticated',
+            ]);
+        }
+        if(!$user->is_admin){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Operation not allowed!',
+            ]);
+        }
+        $request->validate([
+            'user_id' => 'required|integer',
+        ]);
 
-        return $this->successResponse('User set as admin successfully');
+        $userId = $request->input('user_id');
+        $adminUser = User::find($userId);
+        if (!$adminUser) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Admin user not found',
+            ]);
+        }
+
+        $adminUser->update(['is_admin' => true]);
+
+       return response()->json([
+        'status' => 'success',
+        'message' => 'Admin status updated successfully',
+       ]);
     }
 
     /**
@@ -39,11 +68,40 @@ class AdminController extends Controller
      * @param  \App\Models\User  $user
      * @return \Illuminate\Http\JsonResponse
      */
-    public function disableAdmin(User $user): JsonResponse
+    public function disableAdmin(Request $request): JsonResponse
     {
-        $user->update(['is_admin' => false]);
+        $user = auth()->user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not authenticated',
+            ]);
+        }
+        if(!$user->is_admin){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Operation not allowed!',
+            ]);
+        }
+        $request->validate([
+            'user_id' => 'required|integer',
+        ]);
 
-        return $this->successResponse('User is no longer an admin');
+        $userId = $request->input('user_id');
+        $adminUser = User::find($userId);
+        if (!$adminUser) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Admin user not found',
+            ]);
+        }
+
+        $adminUser->update(['is_admin' => false]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Admin status is now removed for this user',
+        ]);
     }
 
     /**
@@ -170,6 +228,47 @@ class AdminController extends Controller
         $request->validate([
             'approval_status'=>'required',
             'payment_id'=>'required',
+
+        ]);
+        
+
+        $user = auth::user();
+        if(!$user){
+            return  response()->json([
+                'status'=>'error',
+                'message'=>'user not authenticated'
+            ]);
+        }
+
+        if (!$user->is_admin) {
+            return response()->json([
+                'status'=>'error',
+                'message'=>'Operation not allowed!'
+            ]);
+
+        }
+
+
+        $payments = Payment::where($request->payment_id)
+        ->update([
+            'status'=>$request->approval_status,
+            
+        ]);
+
+
+
+        return response()->json([
+            'status'=>'error',
+            'message'=>'Payment status updated successfully'
+        ]);
+
+    }
+
+
+    public function updatePaymentStatusInformation(Request $request){
+        $request->validate([
+            'order_number'=>'required',
+            'status'=>'required',
 
         ]);
         
