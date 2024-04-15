@@ -31,7 +31,10 @@ use App\Http\Controllers\Api\AdminSettingsController;
 
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
+Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('logout', [AuthController::class, 'logout']);
+Route::post('reset-password',[AuthController::class,'resetPassword']);
+
 
 Route::middleware('auth:api')->group(function () {
     Route::get('get-user', [AuthController::class, 'userInfo']);

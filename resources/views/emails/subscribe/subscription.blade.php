@@ -125,7 +125,7 @@
 <body>
     <div class="body-container">
         <img src="{{ asset('storage/assets/sosmart-logo.png') }}" alt="Subscribe">
-        <h1>Thank You for Subscribing!</h1>
+        <h4>Thank You for Subscribing!</h4>
         <div class="container">
             <img src="{{ asset('storage/assets/email-50.png') }}" alt="Subscribe">
             <p class="thank-you">We're delighted to welcome you aboard!<br>
