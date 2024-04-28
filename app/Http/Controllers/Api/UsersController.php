@@ -9,7 +9,7 @@ use App\Models\User;
 class UsersController extends Controller
 {
     /**
-     * Get details of the authenticated user.
+     * Get details of the authenticated user.d
      *
      * @return \Illuminate\Http\JsonResponse
      */

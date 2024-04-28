@@ -62,6 +62,7 @@ Route::middleware(['shoppingGuest'])->group(function () {
 
     Route::prefix('reviews')->group(function () {
         Route::get('/show/{productId}', [ReviewController::class, 'show']);
+        Route::post('/add',[ReviewController::class,'createReview']);
     });
 
     Route::prefix('paymentmethods')->group(function () {
@@ -78,6 +79,11 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/{user}', [UsersController::class, 'showProfile']);
         Route::put('/update', [UsersController::class, 'updateProfile']);
     });
+    Route::prefix('reviews')->group(function () {
+        
+        Route::post('/add',[ReviewController::class,'createReview']);
+    });
+
 
     // Order routes
     Route::prefix('orders')->group(function () {

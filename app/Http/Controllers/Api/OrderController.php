@@ -11,7 +11,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use illuminate\Http\facades\Auth;
 use Illuminate\Support\Facades\Validator;
-
+use Illuminate\Support\Facades\DB;
+// use illuminate\Support\Facades\DB;
 class OrderController extends Controller
 {
     public function generateOrderId()
@@ -42,7 +43,8 @@ class OrderController extends Controller
         $orders = [];
         if ($user) {
             if ($user->is_admin == true) {
-                $orders = Order::join('users', 'orders.user_id', '=', 'users.id')->select('orders.*', 'users.firstname', 'users.lastname', 'orders.id as id', 'orders.status as order_status')->orderBy('created_at', 'desc')->paginate(10);
+                $orders = Order::join('users', 'orders.user_id', '=', 'users.id')
+                    ->join('payment_methods', 'orders.payment_method', 'payment_methods.id')->select('orders.*', 'payment_methods.name as payment_method', 'users.firstname', 'users.lastname', 'orders.id as id', 'orders.status as order_status')->orderBy('created_at', 'desc')->paginate(10);
             } else {
                 return response()->json(['message' => 'User not authenticated'], 401);
             }
@@ -69,8 +71,8 @@ class OrderController extends Controller
             return response()->json(['message' => 'User not authenticated'], 401);
         }
 
-       
-        $orders = $user->orders()->join('order_items', 'orders.id', '=', 'order_items.order_id')->join('products', 'products.id', '=', 'order_items.product_id')->join('users', 'orders.user_id', '=', 'users.id')->select('orders.*','products.*', 'products.id as product_id', 'order_items.quantity as quantity',  'users.firstname', 'users.lastname', 'orders.id as id', 'order_items.order_id as order_items_id', 'orders.status as order_status')->get();
+
+        $orders = $user->orders()->join('order_items', 'orders.id', '=', 'order_items.order_id')->join('products', 'products.id', '=', 'order_items.product_id')->join('users', 'orders.user_id', '=', 'users.id')->select('orders.*', 'products.*', 'products.id as product_id', 'order_items.quantity as quantity', 'users.firstname', 'users.lastname', 'orders.id as id', 'order_items.order_id as order_items_id', 'orders.status as order_status')->get();
 
         return response()->json(
             [
@@ -114,7 +116,18 @@ class OrderController extends Controller
             ->first();
 
         $order_id = $order->id;
-        $orderItems = $orders = $user->orders()->join('order_items', 'orders.id', '=', 'order_items.order_id')->join('products', 'products.id', '=', 'order_items.product_id')->where('order_items.order_id', $order_id)->get();
+      
+        $orderItems = $user->orders()
+            ->join('order_items', 'orders.id', '=', 'order_items.order_id')
+            ->join('products', 'products.id', '=', 'order_items.product_id')
+            ->leftJoin('reviews', 'reviews.product_id', '=', 'products.id')
+            ->where('order_items.order_id', $order_id)
+                // ...
+
+            ->select('orders.*', 'order_items.*', 'products.*', 
+                DB::raw('(CASE WHEN reviews.id IS NOT NULL THEN TRUE ELSE FALSE END) as review_exists'))
+            ->get();
+     
 
         $paymentInfomation = Payment::where('order_id', $order_id)->first();
         $adminSettings = AdminSettings::first();
@@ -212,6 +225,7 @@ class OrderController extends Controller
         $validator = Validator::make($request->all(), [
             'order_number' => 'required',
             'status' => 'required | in:pending,processing,shipped,delivered,cancelled',
+
         ]);
 
         if ($validator->fails()) {
@@ -263,7 +277,12 @@ class OrderController extends Controller
                 'message' => 'Order has been already delivered, you cannot update the status',
             ]);
         }
-        $order->update(['status' => $request->status]);
+        $order->update(
+            [
+                'status' => $request->status,
+                'delivery_status' => $request->status
+            ]
+        );
 
         return response()->json([
             'status' => 'success',

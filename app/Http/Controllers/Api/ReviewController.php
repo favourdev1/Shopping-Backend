@@ -16,7 +16,7 @@ class ReviewController extends Controller
         $validator = Validator::make(
             ['product_id' => $productId],
             [
-                'product_id' => 'required:exists:product_id',
+                'product_id' => 'required:exists:products,product_id',
             ],
         );
 
@@ -79,21 +79,34 @@ class ReviewController extends Controller
             );
             
         }
+
+    
         $request->validate([
-            'product_id' => 'required | exists:product_id',
+            'product_id' => 'required | exists:products,id',
             'order_number' => 'required|exists:orders,order_number',
             'heading' => 'required',
-            'stars' => 'is_numeric|min:1,max:5',
+            'stars' => 'required|numeric|min:1,max:5',
             'description' => 'required',
         ]);
 
         $user_id = $user->id;
 
+            // check if revview exist 
+        $review =Review::where('product_id','=',$request->product_id)
+        ->where('order_number','=',$request->order_number)
+        ->where('user_id','=',$user->id)->first();
+
+        if($review){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'review already exist',
+            ]);
+        }
         $Review = Review::create([
             'product_id' => $request->product_id,
             'order_number' => $request->order_number,
             'heading' => $request->heading,
-            'stars' => $request->heading,
+            'stars' => $request->stars,
             'user_id' => $user_id,
             'description' => $request->description,
         ]);

@@ -32,7 +32,7 @@ class CreateUsersTable extends Migration
             $table->timestamps();
 
 
-            $table->foreign('default_address_id')->references('id')->on('addresses')->onDelete('set null');
+            // $table->foreign('default_address_id')->references('id')->on('addresses')->onDelete('set null');
         });
     }
 
