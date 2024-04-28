@@ -12,6 +12,9 @@ use Illuminate\Http\Request;
 use illuminate\Http\facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use App\Mail\OrderStatusUpdated;
+use Illuminate\Support\Facades\Mail;
+
 // use illuminate\Support\Facades\DB;
 class OrderController extends Controller
 {
@@ -116,18 +119,22 @@ class OrderController extends Controller
             ->first();
 
         $order_id = $order->id;
-      
+
         $orderItems = $user->orders()
             ->join('order_items', 'orders.id', '=', 'order_items.order_id')
             ->join('products', 'products.id', '=', 'order_items.product_id')
             ->leftJoin('reviews', 'reviews.product_id', '=', 'products.id')
             ->where('order_items.order_id', $order_id)
-                // ...
+            // ...
 
-            ->select('orders.*', 'order_items.*', 'products.*', 
-                DB::raw('(CASE WHEN reviews.id IS NOT NULL THEN TRUE ELSE FALSE END) as review_exists'))
+            ->select(
+                'orders.*',
+                'order_items.*',
+                'products.*',
+                DB::raw('(CASE WHEN reviews.id IS NOT NULL THEN TRUE ELSE FALSE END) as review_exists')
+            )
             ->get();
-     
+
 
         $paymentInfomation = Payment::where('order_id', $order_id)->first();
         $adminSettings = AdminSettings::first();
@@ -245,6 +252,7 @@ class OrderController extends Controller
         //return a success message
 
         $order = Order::where('order_number', $request->order_number)->first();
+
         if (!$order) {
             return response()->json(
                 [
@@ -254,7 +262,16 @@ class OrderController extends Controller
                 200,
             );
         }
-
+        $order_user = User::where('id', $order->user_id)->first();
+        $recipientEmail = $order_user->email;
+        // $orderItemsContent = OrderItems::join('products', 'products.id', '=', 'order_items.product_id')
+        // ->where('order_items.order_id', $order->id)
+        // ->select('order_items.*', 'products.*')->get();
+        $orderItemsContent = OrderItems::join('products', 'products.id', '=', 'order_items.product_id')
+        ->where('order_items.order_id', $order->id)
+        ->select('order_items.*', 'products.*')->get()->map(function ($item) {
+            return (object) $item->toArray();
+        });
         if ($order->status == $request->status) {
             return response()->json(
                 [
@@ -277,16 +294,31 @@ class OrderController extends Controller
                 'message' => 'Order has been already delivered, you cannot update the status',
             ]);
         }
-        $order->update(
-            [
-                'status' => $request->status,
-                'delivery_status' => $request->status
-            ]
-        );
+        // $order->update(
+        //     [
+        //         'status' => $request->status,
+        //         'delivery_status' => $request->status
+        //     ]
+        // );
 
+        // send email to the user
+        // find out why producct name is not being added in orderitems content  array 
+
+
+        // Mail::to($recipientEmail)->send(new OrderStatusUpdated($order, $order_user, $orderItemsContent, $request->status));
+
+        Mail::to($recipientEmail)->queue(new OrderStatusUpdated($order, $order_user, $orderItemsContent, $request->status));
+
+        
         return response()->json([
             'status' => 'success',
             'message' => 'Order status updated successfully',
+            'data'=>$orderItemsContent
         ]);
+    }
+
+    public function test (){
+      echo "<pre>";
+      print_r( User::where('id', 1)->select('firstname', 'lastname', 'email')->first());
     }
 }

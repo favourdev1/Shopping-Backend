@@ -218,3 +218,6 @@ Route::prefix('email')->group(function () {
     Route::post('/subscribe', [EmailSubscriptionController::class, 'store']);
     Route::get('/subscribers', [EmailSubscriptionController::class, 'index']);
 });
+
+
+Route::get('/test', [OrderController::class, 'test']);

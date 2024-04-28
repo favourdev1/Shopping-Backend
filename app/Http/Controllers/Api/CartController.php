@@ -14,6 +14,10 @@ use Illuminate\Support\Facades\Http;
 use App\Models\Address;
 use App\Models\AdminSettings;
 use App\Http\Controllers\Api\OrderController;
+use illuminate\Support\Facades\Mail;
+use App\Mail\OrderStatusUpdated;
+
+use App\Models\OrderItems;
 
 class CartController extends Controller
 {
@@ -383,6 +387,18 @@ class CartController extends Controller
             }
 
             $user->carts()->delete();
+            $order_user = User::where('id', $userId)->first();
+            $recipientEmail = $order_user->email;
+            $orderItemsContent = OrderItems::join('products', 'products.id', '=', 'order_items.product_id')
+            ->where('order_items.order_number', $orderId)
+            ->select('order_items.*', 'products.*')->get()->map(function ($item) {
+                return (object) $item->toArray();
+            });
+            
+
+            Mail::to($recipientEmail)->queue(new OrderStatusUpdated($order, $order_user, $orderItemsContent, $request->status));
+
+        
 
             return response()->json([
                 'status' => 'success',

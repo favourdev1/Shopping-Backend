@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+
 class UsersController extends Controller
 {
     /**
@@ -16,7 +17,7 @@ class UsersController extends Controller
     public function GetAllUsers()
     {
         $user = auth()->user();
-        if($user->is_admin == false){
+        if ($user->is_admin == false) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Operation not allowed!',
@@ -25,9 +26,9 @@ class UsersController extends Controller
 
         $allUsers = User::all();
         return response()->json([
-            'status'=>'success',
-            'data' => ['users'=>$allUsers],
-            
+            'status' => 'success',
+            'data' => ['users' => $allUsers],
+
         ]);
     }
 
@@ -39,7 +40,7 @@ class UsersController extends Controller
      */
     public function showProfile($userId)
     {
-        
+
         try {
             // Retrieve the authenticated user
             $user = auth()->user();
@@ -59,7 +60,7 @@ class UsersController extends Controller
                 ], 403); // 403 Forbidden status code
             }
         } catch (\Exception $e) {
-            return response()->json(['error' => $e],200);
+            return response()->json(['error' => $e], 200);
         }
     }
 
@@ -90,7 +91,13 @@ class UsersController extends Controller
 
             // Update only the fields that are provided in the request
             $user->update($request->only([
-                'firstname', 'lastname', 'address', 'country', 'city', 'phone_number', 'profile_img'
+                'firstname',
+                'lastname',
+                'address',
+                'country',
+                'city',
+                'phone_number',
+                'profile_img'
                 // Add more fields as needed
             ]));
 
@@ -110,12 +117,11 @@ class UsersController extends Controller
     }
 
     public function getUserAccessTokens($userId)
-{
-    $tokens = DB::table('oauth_access_tokens')
-        ->where('user_id', $userId)
-        ->get();
+    {
+        $tokens = DB::table('oauth_access_tokens')
+            ->where('user_id', $userId)
+            ->get();
 
-    return $tokens;
+        return $tokens;
+    }
 }
-}
-

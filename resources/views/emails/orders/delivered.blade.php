@@ -71,9 +71,8 @@
         <img src="">
         <h1>Hi {{$user->firstname." ".$user->lastname}},</h1>
         <p>Thank you for shopping on Sosmart!</p>
-        <p>Your order {{$order->order_number}} has been shipped!</p>
+        <p>Your order {{$order->order_number}} has been delivered and is now available for collection!</p>
         <br>
-        <p>It will be packed and shipped as soon as possible.You will receive a notification from us once the item (s) are available for collection</p>
         <p>Your order details are:</p>
 
         <table>
@@ -96,13 +95,6 @@
             </tbody>
         </table>
 
-        {{-- @php
-        echo "
-        <pre>";
-        print_r($orderedItems);
-        echo "</pre>";
-        @endphp --}}
-        {{-- <p>You can expect to receive your order within {{ $order->estimated_delivery_days }} business days.</p> --}}
         <p style="font-size: 12px">If you have any questions, please don't hesitate to contact us at <a href="mailto:{{$response_email}}">{{$response_email}}</a>.</p>
 
         <p>Thank you for doing business with us!</p>
