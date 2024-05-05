@@ -144,6 +144,7 @@ Route::middleware('auth:api')->group(function () {
                 Route::get('/', [AdminSettingsController::class, 'index']);
                 Route::post('/office/address', [AdminSettingsController::class, 'addOrUpdateOfficeAddress']);
                 Route::post('/shipping/cost', [AdminSettingsController::class, 'addOrUpdateShippingCost']);
+                Route::post('/update/account/numbers', [AdminSettingsController::class, 'updateAccountNumbers']);
             });
 
             // Payment controller functionalities

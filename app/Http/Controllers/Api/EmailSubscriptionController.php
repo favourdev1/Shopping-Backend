@@ -20,8 +20,8 @@ class EmailSubscriptionController extends Controller
         //         $emailContent = (new OrderShipped($order))->render();
         // return $emailContent;
         // mail::to('')
-        $emailContent = (new  EmailSubscribed('favour@gmail.com'))->render();
-        return $emailContent;
+        // $emailContent = (new  EmailSubscribed('favour@gmail.com'))->render();
+        // return $emailContent;
         return response()->json(['status' => 'success'], 201);
         // return EmailSubscription::all();
     }
