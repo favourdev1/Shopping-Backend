@@ -60,7 +60,7 @@ class UsersController extends Controller
                 ], 403); // 403 Forbidden status code
             }
         } catch (\Exception $e) {
-            return response()->json(['error' => $e], 200);
+            return response()->json(['error' => $e->getMessage()], 200);
         }
     }
 
