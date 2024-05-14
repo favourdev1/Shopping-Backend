@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => ['api.sosmart.com', 'localhost', 'sosmart.com'],
 
     'allowed_origins_patterns' => [],
 
