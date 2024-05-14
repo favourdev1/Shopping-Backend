@@ -44,6 +44,12 @@ class UsersController extends Controller
         try {
             // Retrieve the authenticated user
             $user = auth()->user();
+            if(!$user){
+return response()->json([
+                'status' => 'error',
+                'message' => 'User not found',
+            ], 404);
+            }
 
             // Check if the authenticated user matches the requested user ID
             if ($user->id == $userId) {
