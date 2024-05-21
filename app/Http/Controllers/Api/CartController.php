@@ -29,6 +29,11 @@ class CartController extends Controller
     public function index()
     {
         $user = Auth::user();
+        return response()->json([
+            'status' => 'success',
+    
+            "user" => $user
+        ]);
 
         $cartItems = $user->carts()->join('products', 'carts.product_id', '=', 'products.id')->select('carts.id as cart_id', 'carts.quantity', 'carts.user_id', 'products.*')->get();
 
