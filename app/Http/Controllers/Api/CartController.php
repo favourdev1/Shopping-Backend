@@ -35,6 +35,7 @@ class CartController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => $cartItems,
+            "user" => $user
         ]);
     }
 
