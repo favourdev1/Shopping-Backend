@@ -29,18 +29,22 @@ class CartController extends Controller
     public function index()
     {
         $user = Auth::user();
-        return response()->json([
-            'status' => 'success',
-    
-            "user" => $user
-        ]);
+        if ($user == null) {
+
+            return response()->json([
+                'status' => 'error',
+                "message" => 'User  not found ',
+                "data" => $user
+            ]);
+        }
 
         $cartItems = $user->carts()->join('products', 'carts.product_id', '=', 'products.id')->select('carts.id as cart_id', 'carts.quantity', 'carts.user_id', 'products.*')->get();
 
         return response()->json([
             'status' => 'success',
+            'message' => 'Cart items retrieved successfully',
             'data' => $cartItems,
-            "user" => $user
+  
         ]);
     }
 
@@ -284,7 +288,7 @@ class CartController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Shipping cost calculated successfully',
-            'data' => ['shipping_cost' => round($shippingCost,2)],
+            'data' => ['shipping_cost' => round($shippingCost, 2)],
         ]);
     }
 
@@ -396,15 +400,15 @@ class CartController extends Controller
             $order_user = User::where('id', $userId)->first();
             $recipientEmail = $order_user->email;
             $orderItemsContent = OrderItems::join('products', 'products.id', '=', 'order_items.product_id')
-            ->where('order_items.order_number', $orderId)
-            ->select('order_items.*', 'products.*')->get()->map(function ($item) {
-                return (object) $item->toArray();
-            });
-            
+                ->where('order_items.order_number', $orderId)
+                ->select('order_items.*', 'products.*')->get()->map(function ($item) {
+                    return (object) $item->toArray();
+                });
+
 
             Mail::to($recipientEmail)->queue(new OrderStatusUpdated($order, $order_user, $orderItemsContent, $request->status));
 
-        
+
 
             return response()->json([
                 'status' => 'success',
