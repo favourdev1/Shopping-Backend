@@ -34,7 +34,7 @@ class CartController extends Controller
             return response()->json([
                 'status' => 'error',
                 "message" => 'User  not found ',
-                "data" => $user
+                "data" =>[]
             ]);
         }
 
