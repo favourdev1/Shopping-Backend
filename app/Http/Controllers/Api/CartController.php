@@ -387,6 +387,7 @@ class CartController extends Controller
                 'tax' => $tax,
             ]);
 
+            $order_id = $order->id;
             foreach ($cartItems as $cartItem) {
                 $order->orderItems()->create([
                     'product_id' => $cartItem->id,
@@ -400,7 +401,7 @@ class CartController extends Controller
             $order_user = User::where('id', $userId)->first();
             $recipientEmail = $order_user->email;
             $orderItemsContent = OrderItems::join('products', 'products.id', '=', 'order_items.product_id')
-                ->where('order_items.order_number', $orderId)
+                ->where('order_items.order_id', $order_id)
                 ->select('order_items.*', 'products.*')->get()->map(function ($item) {
                     return (object) $item->toArray();
                 });
