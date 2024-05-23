@@ -407,7 +407,7 @@ class CartController extends Controller
                 });
 
 
-            Mail::to($recipientEmail)->queue(new OrderStatusUpdated($order, $order_user, $orderItemsContent, $request->status));
+            Mail::to($recipientEmail)->queue(new OrderStatusUpdated($order, $order_user, $orderItemsContent, $request->status??'pending'));
 
 
 
