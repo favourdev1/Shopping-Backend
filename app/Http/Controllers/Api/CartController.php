@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Http;
 use App\Models\Address;
 use App\Models\AdminSettings;
 use App\Http\Controllers\Api\OrderController;
-use illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderStatusUpdated;
 
 use App\Models\OrderItems;
