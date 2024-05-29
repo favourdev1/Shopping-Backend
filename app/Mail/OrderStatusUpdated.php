@@ -75,7 +75,7 @@ class OrderStatusUpdated extends Mailable
                 'orderedItems' => $this->orderedItems,
                 'user' => $this->user,
                 'status' => $this->status,
-                'response_email' => env('MAIL_FROM_ADDRESS', 'support@sosmart.com')
+                'response_email' => env('MAIL_FROM_ADDRESS', 'support@sosmartshopping.com')
             ],
         );
     }
