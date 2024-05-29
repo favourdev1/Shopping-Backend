@@ -65,7 +65,7 @@ class PaymentController extends Controller
         $order = Order::where('order_number', $request->order_number)->first();
 
         if ($order && $order->payment) {
-            $order->payment->status = 'completed';
+            $order->payment->payment_status = 'completed';
             $order->payment->save();
         } else {
             // Handle the case where the order or payment was not found
