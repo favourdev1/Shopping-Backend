@@ -15,6 +15,8 @@ class Authenticate extends Middleware
         return null;
     }
 
+    
+
     /**
      * Handle an unauthenticated user.
      */

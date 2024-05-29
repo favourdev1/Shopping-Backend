@@ -265,6 +265,15 @@ class CartController extends Controller
 
     public function calculateShippingCost(Request $request)
     {
+$user = Auth::user();
+if(!$user){
+    return response()->json([
+        'status' => 'error',
+        'message' => 'User not found',
+    ], 404);
+}
+
+
         $validator = Validator::make($request->all(), [
             'address' => 'required|exists:addresses,id',
         ]);
