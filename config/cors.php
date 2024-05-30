@@ -19,8 +19,9 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['https://api.sosmartshopping.com', 'http://localhost', 'https://sosmartshopping.com','https://www.sosmartshopping.com'],
+    // 'allowed_origins' => ['https://api.sosmartshopping.com', 'http://localhost', 'https://sosmartshopping.com','https://www.sosmartshopping.com'],
 
+    'allowed_origins' => ['*'],
     'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],

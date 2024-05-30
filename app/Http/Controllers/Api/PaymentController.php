@@ -34,7 +34,7 @@ class PaymentController extends Controller
             'payment_amount' => 'required',
             'account_number' => 'required',
         ]);
-
+ 
         $order = Order::where('order_number', $request->order_number)->first();
         $orderid = $order->id;
 

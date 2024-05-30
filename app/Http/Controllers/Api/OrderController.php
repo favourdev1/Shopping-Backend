@@ -71,7 +71,8 @@ class OrderController extends Controller
         $user = auth()->user();
         $orders = [];
         if (!$user) {
-            return response()->json(['message' => 'User not authenticated'], 401);
+            return response()->json(['status'=>'error',
+            'message' => 'User not authenticated'], 401);
         }
 
 
