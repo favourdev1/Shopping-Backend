@@ -14,11 +14,12 @@ return [
     | To learn more: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
     |
     */
-
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+// previous
+    // 'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['*'],
 
     'allowed_methods' => ['*'],
-
+// /previous
     // 'allowed_origins' => ['https://api.sosmartshopping.com', 'http://localhost', 'https://sosmartshopping.com','https://www.sosmartshopping.com'],
 
     'allowed_origins' => ['*'],
