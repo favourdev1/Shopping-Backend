@@ -14,15 +14,13 @@ return [
     | To learn more: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
     |
     */
-// previous
-    // 'paths' => ['api/*', 'sanctum/csrf-cookie'],
-    'paths' => ['*'],
+
+    'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
-// /previous
-    // 'allowed_origins' => ['https://api.sosmartshopping.com', 'http://localhost', 'https://sosmartshopping.com','https://www.sosmartshopping.com'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => ['https://api.sosmartshopping.com', 'http://localhost', 'https://sosmartshopping.com','https://www.sosmartshopping.com'],
+
     'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],
