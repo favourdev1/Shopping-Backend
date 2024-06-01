@@ -169,7 +169,7 @@ Route::middleware('auth:api')->group(function () {
                 Route::get('/', [ProductController::class, 'index']);
                 Route::get('/{product}', [ProductController::class, 'show']);
                 Route::post('/add', [ProductController::class, 'store']);
-                Route::put('/{product}', [ProductController::class, 'update']);
+                Route::post('/update/{product}', [ProductController::class, 'update']);
                 Route::post('/upload-image', [ProductController::class, 'upload']);
                 Route::delete('/delete/{product}', [ProductController::class, 'destroy']);
             });
