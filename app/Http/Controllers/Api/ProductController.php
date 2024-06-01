@@ -229,7 +229,7 @@ class ProductController extends Controller
             // Find the product by ID
             $product = Product::where('id', $productId)->firstOrFail();
 
-            // Delete the product
+            // Delete the produc
             $product->delete();
 
             return response()->json([
