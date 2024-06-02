@@ -174,7 +174,7 @@ class ProductController extends Controller
                 'meta_description' => 'required|string',
 
                 'sku' => 'sometimes|string|max:20',
-                'cash_on_delivery' => 'in:true,false',
+                // 'cash_on_delivery' => 'in:true,false',
                 'free_shipping' => 'in:true,false',
                 'shipping_cost' => 'numeric|min:0',
                 'tax' => 'min:0',
