@@ -20,9 +20,9 @@ class ProductController extends Controller
         // Retrieve all products
         $products = Product::join('categories', 'products.category_id', '=', 'categories.id')
             ->select('products.*', 'categories.category_name as category')
-            // ->paginate(10);
-            ->get()
-            ->take(10);
+            ->paginate(10);
+            
+            // ->take(10);
         return response()->json([
             'status' => 'success',
             'data' => ['products' => $products],
