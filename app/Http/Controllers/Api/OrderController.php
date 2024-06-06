@@ -81,9 +81,9 @@ public function adminFetchOrdersTest()
         // } else {
         //     return response()->json(['message' => 'User not authenticated'], 401);
         // }
-    } else {
-        return response()->json(['message' => 'User not authenticated'], 401);
-    }
+    // } else {
+    //     return response()->json(['message' => 'User not authenticated'], 401);
+    // }
 
     return response()->json(
         [
