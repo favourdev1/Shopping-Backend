@@ -222,3 +222,6 @@ Route::prefix('email')->group(function () {
 
 
 Route::get('/test', [OrderController::class, 'test']);
+
+
+Route::get('/test2',[OrderController::class, 'adminFetchOrdersTest']);

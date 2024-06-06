@@ -65,6 +65,51 @@ class OrderController extends Controller
         );
     }
 
+
+
+
+// ===================== fetch order test route =====================
+
+public function adminFetchOrdersTest()
+{
+    $user = 1;
+    $orders = [];
+    if ($user) {
+        if ($user->is_admin == true) {
+            $orders = Order::join('users', 'orders.user_id', '=', 'users.id')
+                ->join('payment_methods', 'orders.payment_method', 'payment_methods.id')->select('orders.*', 'payment_methods.name as payment_method', 'users.firstname', 'users.lastname', 'orders.id as id', 'orders.status as order_status')->orderBy('created_at', 'desc')->paginate(10);
+        } else {
+            return response()->json(['message' => 'User not authenticated'], 401);
+        }
+    } else {
+        return response()->json(['message' => 'User not authenticated'], 401);
+    }
+
+    return response()->json(
+        [
+            'data' => $orders,
+            'message' => 'Orders fetched successfully.',
+            'status' => 'success',
+        ],
+        200,
+    );
+}
+
+// ===================== fetch order test route =====================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // fetch all the orders for a particular user
     public function fetchOrders()
     {
