@@ -67,57 +67,16 @@ class OrderController extends Controller
 
 
 
-
-// ===================== fetch order test route =====================
-
-public function adminFetchOrdersTest()
-{
-    $user = 1;
-    $orders = [];
-    // if ($user) {
-    //     if ($user->is_admin == true) {
-            $orders = Order::join('users', 'orders.user_id', '=', 'users.id')
-                ->join('payment_methods', 'orders.payment_method', 'payment_methods.id')->select('orders.*', 'payment_methods.name as payment_method', 'users.firstname', 'users.lastname', 'orders.id as id', 'orders.status as order_status')->orderBy('created_at', 'desc')->paginate(10);
-        // } else {
-        //     return response()->json(['message' => 'User not authenticated'], 401);
-        // }
-    // } else {
-    //     return response()->json(['message' => 'User not authenticated'], 401);
-    // }
-
-    return response()->json(
-        [
-            'data' => $orders,
-            'message' => 'Orders fetched successfully.',
-            'status' => 'success',
-        ],
-        200,
-    );
-}
-
-// ===================== fetch order test route =====================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     // fetch all the orders for a particular user
     public function fetchOrders()
     {
         $user = auth()->user();
         $orders = [];
         if (!$user) {
-            return response()->json(['status'=>'error',
-            'message' => 'User not authenticated'], 401);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not authenticated'
+            ], 401);
         }
 
 
@@ -231,7 +190,13 @@ public function adminFetchOrdersTest()
             );
         }
 
-        $order = $user->orders()->where('order_number', $order_number)->orderBy('created_at', 'desc')->first();
+        $order = $user->orders()
+            ->select('orders.*', 'payment_methods.name as payment_method')
+            ->where('order_number', $order_number)
+            ->join('payment_methods', 'payment_methods.id', '=', 'orders.payment_method')
+            ->orderBy('created_at', 'desc')
+            ->first();
+
 
         $order_id = $order->id;
         $user_id = $order->user_id;
@@ -314,10 +279,10 @@ public function adminFetchOrdersTest()
         // ->where('order_items.order_id', $order->id)
         // ->select('order_items.*', 'products.*')->get();
         $orderItemsContent = OrderItems::join('products', 'products.id', '=', 'order_items.product_id')
-        ->where('order_items.order_id', $order->id)
-        ->select('order_items.*', 'products.*')->get()->map(function ($item) {
-            return (object) $item->toArray();
-        });
+            ->where('order_items.order_id', $order->id)
+            ->select('order_items.*', 'products.*')->get()->map(function ($item) {
+                return (object) $item->toArray();
+            });
         if ($order->status == $request->status) {
             return response()->json(
                 [
@@ -355,16 +320,17 @@ public function adminFetchOrdersTest()
 
         Mail::to($recipientEmail)->queue(new OrderStatusUpdated($order, $order_user, $orderItemsContent, $request->status));
 
-        
+
         return response()->json([
             'status' => 'success',
             'message' => 'Order status updated successfully',
-            'data'=>$orderItemsContent
+            'data' => $orderItemsContent
         ]);
     }
 
-    public function test (){
-      echo "<pre>";
-      print_r( User::where('id', 1)->select('firstname', 'lastname', 'email')->first());
+    public function test()
+    {
+        echo "<pre>";
+        print_r(User::where('id', 1)->select('firstname', 'lastname', 'email')->first());
     }
 }
