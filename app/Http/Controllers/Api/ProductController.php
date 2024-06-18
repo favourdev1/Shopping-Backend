@@ -251,9 +251,10 @@ class ProductController extends Controller
     public function upload(Request $request)
     {
         try {
-            $request->validate([
-                'image' => 'required|image|mimes:jpeg,png,jpg,',
-            ]);
+        
+$request->validate([
+    'image' => 'required|image|mimes:jpeg,png,jpg,gif,x-png,bmp,svg,webp,tiff,ico',
+]);
 
             if ($request->file('image')->isValid()) {
                 $image = $request->file('image');
