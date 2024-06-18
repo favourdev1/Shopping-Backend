@@ -252,7 +252,7 @@ class ProductController extends Controller
     {
         try {
             $request->validate([
-                'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'image' => 'required|image|mimes:jpeg,png,jpg,',
             ]);
 
             if ($request->file('image')->isValid()) {
