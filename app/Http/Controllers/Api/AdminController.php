@@ -120,7 +120,13 @@ class AdminController extends Controller
             200,
         );
     }
-
+    public function getPaymentInformation  (){
+        $adminSettings = AdminSettings::first();
+        return response()->json([
+            'status' => 'success',
+            'data' => $adminSettings
+        ]);
+    }
     public function getAdminSettings()
     {
         $adminSettings = AdminSettings::first();

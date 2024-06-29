@@ -84,6 +84,14 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/add',[ReviewController::class,'createReview']);
     });
 
+    
+            // ==========================================
+            // ========= AdminSettings ================
+            // ==========================================
+    Route::prefix('settings')->group(function () {
+        Route::get('/paymentInformation', [AdminController::class, 'getPaymentInformation']);
+    });
+
 
     // Order routes
     Route::prefix('orders')->group(function () {
@@ -105,6 +113,8 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/', [WishlistController::class, 'index']);
         Route::post('/add/', [WishlistController::class, 'addOrDelete']);
     });
+
+
 
     // Cart routes
     Route::prefix('carts')->group(function () {
