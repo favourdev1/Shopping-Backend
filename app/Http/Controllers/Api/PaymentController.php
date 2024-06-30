@@ -46,7 +46,17 @@ class PaymentController extends Controller
             ]);
         }
 
+        
         $user_id = $user->id;
+        // check if the user has already made a payment before 
+        $payment = Payment::where('order_id', $orderid)
+        ->where('user_id',$user_id)->first();
+        if ($payment) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'payment already made for this order',
+            ]);
+        }   
         $image = $request->file('payment_proof');
         $imageName = time() . '.' . $image->extension();
         $image->move(public_path('images'), $imageName);
