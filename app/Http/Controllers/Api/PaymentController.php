@@ -50,7 +50,8 @@ class PaymentController extends Controller
         $image = $request->file('payment_proof');
         $imageName = time() . '.' . $image->extension();
         $image->move(public_path('images'), $imageName);
-
+// Generate the full URL for the uploaded image
+$imageUrl = asset('images/' . $imageName);
         $payment = Payment::create([
             'order_id' => $orderid,
             'account_number' => $request->account_number,
@@ -58,7 +59,7 @@ class PaymentController extends Controller
 
             'payment_status' => 'completed',
             'payment_amount' => $request->payment_amount,
-            'image' => $imageName,
+            'image' => $imageUrl,
             'payment_date' => \Date::now(),
             'approval_status' => 'pending',
         ]);
